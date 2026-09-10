@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tinimit — Panel del puesto de salud</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#12140f; --panel:#1a1d16; --panel-2:#20241b; --line:#2f3428;
+    --ink:#eef0e6; --ink-2:#a6ac97; --ink-3:#767c68;
+    --accent:#6fb98f; --accent-soft:#1f2c24;
+    --warn:#e2b23c; --warn-soft:#33290f;
+    --danger:#e5695b; --danger-soft:#3a1f1c;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-ui:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
+    font-size:15px;line-height:1.5}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0}
+  .mono{font-family:var(--font-mono)}
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+
+  /* topbar */
+  .top{display:flex;flex-wrap:wrap;align-items:center;gap:16px 22px;
+    padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .top h1{font-size:1.3rem;display:flex;align-items:center;gap:9px}
+  .nav{display:flex;gap:14px;font-size:.85rem}
+  .nav a{color:var(--ink-2);text-decoration:none}
+  .nav a:hover{color:var(--accent)}
+  .nav a.aqui{color:var(--ink);font-weight:600;pointer-events:none}
+  .stats{display:flex;gap:20px;flex-wrap:wrap;margin-left:auto}
+  .stat{display:flex;flex-direction:column;line-height:1.15}
+  .stat b{font-family:var(--font-mono);font-size:1.35rem;font-weight:500}
+  .stat span{font-size:.72rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+  .stat.alerta b{color:var(--danger)}
+  .enlace{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--ink-2)}
+  .enlace button{background:var(--panel-2);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:5px 10px;cursor:pointer;font:inherit;font-size:.78rem}
+  .enlace button:hover{border-color:var(--accent)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+  .dot.off{background:var(--warn)}
+
+  .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h2{font-size:1.02rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .card h2 .count{font-family:var(--font-mono);font-size:.8rem;color:var(--ink-2);font-weight:400}
+
+  /* alertas */
+  #alertas{margin-bottom:18px;border-color:var(--danger);background:linear-gradient(180deg,var(--danger-soft),var(--panel) 60%)}
+  #alertas.vacio{display:none}
+  .alerta-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
+    background:#00000030;margin-bottom:8px}
+  .alerta-row:last-child{margin-bottom:0}
+  .alerta-row .ic{font-size:1.3rem}
+  .alerta-row .txt{flex:1;min-width:0}
+  .alerta-row .txt b{display:block}
+  .alerta-row .txt small{color:var(--ink-2)}
+  .alerta-row button{background:var(--danger);color:#fff;border:none;border-radius:8px;
+    padding:7px 13px;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap}
+  .alerta-row button:hover{filter:brightness(1.1)}
+
+  /* mapa */
+  #mapa svg{width:100%;height:auto;display:block}
+  .node-hit{cursor:pointer}
+  .node circle{transition:r .4s ease}
+  .node text{font-family:var(--font-ui);fill:var(--ink);font-size:11px;pointer-events:none}
+  .node .n{font-family:var(--font-mono);fill:var(--ink-2);font-size:10px}
+  .node.sel circle{stroke:var(--ink);stroke-width:2}
+  .leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--ink-2);margin-top:8px}
+  .leyenda i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+
+  /* feed de conversaciones */
+  .feed{max-height:620px;overflow:auto;margin:-4px -6px;padding:4px 6px}
+  .conv{width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);
+    padding:11px 4px;cursor:pointer;color:var(--ink);font:inherit;display:block}
+  .conv:last-child{border-bottom:none}
+  .conv:hover{background:#ffffff08}
+  .conv-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .conv-h .titulo{font-family:var(--font-display);font-weight:600;font-size:1rem;
+    text-transform:none;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .conv-h time{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-3);flex:none}
+  .conv-sub{color:var(--ink-2);font-size:.8rem;margin-top:2px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .conv-sub b{color:var(--ink);font-weight:600}
+  .conv-prev{color:var(--ink-3);font-size:.83rem;margin-top:4px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .conv.nuevo{animation:flash 1.4s ease}
+  @keyframes flash{from{background:var(--accent-soft)}to{background:transparent}}
+  .pill{font-size:.66rem;font-weight:700;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+  .pill.rutina{background:var(--accent-soft);color:var(--accent)}
+  .pill.urgente{background:var(--warn-soft);color:var(--warn)}
+  .pill.emergencia{background:var(--danger-soft);color:var(--danger)}
+  .badge{font-size:.66rem;color:var(--ink-3);border:1px solid var(--line);border-radius:6px;padding:1px 5px}
+
+  /* transcripción en el drawer */
+  .turnos{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .turno{max-width:88%;padding:8px 11px;border-radius:12px;font-size:.88rem;line-height:1.45;white-space:pre-wrap}
+  .turno.user{align-self:flex-end;background:var(--accent-soft);border-bottom-right-radius:4px}
+  .turno.bot{align-self:flex-start;background:var(--panel-2);border-bottom-left-radius:4px;color:var(--ink-2)}
+  .turno-meta{font-family:var(--font-mono);font-size:.68rem;color:var(--ink-3);margin:2px 0 0}
+  .conv-open-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+  .conv-open-h b{font-family:var(--font-display);font-size:1.1rem;text-transform:none}
+
+  /* buscador */
+  .search input{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;color:var(--ink);font:inherit}
+  .search input:focus{outline:none;border-color:var(--accent)}
+  .res{margin-top:8px}
+  .res button{width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);
+    padding:9px 2px;cursor:pointer;color:var(--ink);font:inherit;display:flex;justify-content:space-between;gap:10px}
+  .res button:hover{color:var(--accent)}
+  .res button span{color:var(--ink-2);font-size:.8rem}
+
+  /* drawer */
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,92vw);background:var(--panel);
+    border-left:1px solid var(--line);padding:20px;overflow:auto;transform:translateX(100%);
+    transition:transform .22s ease;z-index:20}
+  .drawer.open{transform:none}
+  .drawer .x{float:right;background:none;border:none;color:var(--ink-2);font-size:1.3rem;cursor:pointer}
+  .drawer h2{font-size:1.15rem}
+  .drawer .meta{color:var(--ink-2);font-size:.85rem;margin:4px 0 16px}
+  .hist{border-left:2px solid var(--line);padding-left:14px;margin-left:4px}
+  .hist .item{margin-bottom:16px;position:relative}
+  .hist .item::before{content:"";position:absolute;left:-21px;top:5px;width:9px;height:9px;
+    border-radius:50%;background:var(--ink-3)}
+  .hist .item.emergencia::before{background:var(--danger)}
+  .hist .item .h{display:flex;gap:8px;align-items:baseline}
+  .hist .item .h b{text-transform:none}
+  .hist .item .h time{font-family:var(--font-mono);font-size:.74rem;color:var(--ink-3)}
+  .hist .item p{margin:5px 0 0;font-size:.86rem;color:var(--ink-2)}
+  .empty{color:var(--ink-3);font-size:.88rem;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🏥 <span>Tinimit</span> · <span style="font-family:var(--font-ui);font-weight:400;color:var(--ink-2);font-size:.9rem">Puesto de salud · Aldea San Miguel</span></h1>
+    <nav class="nav">
+      <a class="aqui" href="/panel">Panel</a>
+      <a href="/insumos">📦 Insumos</a>
+      <a href="/">Kiosko</a>
+    </nav>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="card" id="alertas">
+    <h2>🚨 Alertas de emergencia <span class="count" id="alertasCount"></span></h2>
+    <div id="alertasList"></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card" id="mapa">
+        <h2>Mapa de la aldea <span class="count">consultas por sector</span></h2>
+        <div id="mapaSvg"></div>
+        <div class="leyenda">
+          <span><i style="background:var(--accent)"></i>rutina</span>
+          <span><i style="background:var(--warn)"></i>atención pronta</span>
+          <span><i style="background:var(--danger)"></i>emergencia abierta</span>
+          <span><i style="background:var(--ink-3)"></i>sin consultas</span>
+        </div>
+      </div>
+      <div class="card search" style="margin-top:18px">
+        <h2>Buscar persona</h2>
+        <input id="q" type="search" placeholder="Nombre, MAC o sector…" autocomplete="off">
+        <div class="res" id="res"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Conversaciones <span class="count" id="feedFiltro">toca una para leerla completa</span></h2>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+</div>
+
+<div class="drawer" id="drawer">
+  <button class="x" id="drawerX" aria-label="Cerrar">✕</button>
+  <div id="drawerBody"></div>
+</div>
+
+<script>
+"use strict";
+const $ = (s,r=document)=>r.querySelector(s);
+const api = (p,opt)=>fetch(p,opt).then(r=>r.json());
+
+const HUB_POS = [320, 232];
+const SECTORES_POS = {
+  "Sector Centro":      [320,360], "Caserío El Tablón": [125,110],
+  "Chuwa Nima Ab'aj":   [515,110], "Panimaché I":       [88,250],
+  "Panimaché II":       [552,250], "Xepiacul":          [175,405],
+  "La Estancia":        [465,405], "Sin sector":        [560,405],
+};
+const PRIO_COLOR = {rutina:"var(--accent)", urgente:"var(--warn)", emergencia:"var(--danger)"};
+
+let vistos = new Set();       // ids de consulta ya pintados
+let ultimoId = 0;
+let filtroSector = null;
+let alertasPrev = -1;         // -1 = primera carga, no sonar
+let primeraCarga = true;
+
+function fmtHora(ts){
+  const d = new Date(ts*1000);
+  return d.toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"});
+}
+function fmtFecha(ts){
+  const d = new Date(ts*1000), hoy = new Date();
+  const dd = Math.floor((hoy - d)/86400000);
+  if(dd<=0) return "hoy " + fmtHora(ts);
+  if(dd===1) return "ayer " + fmtHora(ts);
+  return d.toLocaleDateString("es",{day:"numeric",month:"short"});
+}
+
+/* ---------- stats + enlace ---------- */
+function renderStats(r){
+  $("#stats").innerHTML = `
+    <div class="stat"><b>${r.conversaciones_hoy ?? r.consultas_hoy}</b><span>consultas hoy</span></div>
+    <div class="stat"><b>${r.conversaciones_total ?? r.consultas_total}</b><span>en total</span></div>
+    <div class="stat alerta"><b>${r.emergencias_abiertas}</b><span>emergencias abiertas</span></div>
+    <div class="stat"><b>${r.pacientes}</b><span>personas</span></div>
+    <div class="enlace">
+      <span class="dot ${r.enlace_hub?'':'off'}"></span>
+      enlace al hub ${r.enlace_hub?'activo':'caído'}${r.sin_sincronizar?` · ${r.sin_sincronizar} sin sincronizar`:''}
+      <button id="enlaceBtn">${r.enlace_hub?'simular caída':'reconectar'}</button>
+    </div>`;
+  $("#enlaceBtn").onclick = async ()=>{
+    await api(`/api/panel/enlace?activo=${!r.enlace_hub}`,{method:"POST"});
+    tick();
+  };
+}
+
+/* ---------- mapa ---------- */
+function renderMapa(sectores){
+  const bySec = Object.fromEntries(sectores.map(s=>[s.sector,s]));
+  const maxC = Math.max(1, ...sectores.map(s=>s.consultas));
+  const nodes = Object.entries(SECTORES_POS).map(([nombre,[x,y]])=>{
+    const s = bySec[nombre];
+    return {nombre,x,y,
+      consultas: s?s.consultas:0,
+      abiertas: s?s.alertas_abiertas:0,
+      prio: s?s.prioridad_max:"rutina"};
+  }).filter(n => n.nombre!=="Sin sector" || n.consultas>0);
+
+  const HUB = HUB_POS;
+  let svg = `<svg viewBox="0 0 640 470" role="img" aria-label="Mapa de consultas por sector">`;
+  for(const n of nodes){
+    svg += `<line x1="${HUB[0]}" y1="${HUB[1]}" x2="${n.x}" y2="${n.y}" stroke="var(--line)" stroke-width="1.5"/>`;
+  }
+  // hub central
+  svg += `<g class="node"><circle cx="${HUB[0]}" cy="${HUB[1]}" r="15" fill="var(--panel-2)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="${HUB[0]}" y="${HUB[1]-24}" text-anchor="middle" style="fill:var(--accent)">🏥 Puesto de salud</text></g>`;
+  for(const n of nodes){
+    const r = 8 + 22*Math.sqrt(n.consultas/maxC);
+    const color = n.abiertas>0 ? "var(--danger)" : PRIO_COLOR[n.prio] || "var(--ink-3)";
+    const fill = n.consultas===0 ? "var(--ink-3)" : color;
+    const pulse = n.abiertas>0
+      ? `<circle cx="${n.x}" cy="${n.y}" r="${r}" fill="none" stroke="var(--danger)" stroke-width="2">
+           <animate attributeName="r" from="${r}" to="${r+16}" dur="1.4s" repeatCount="indefinite"/>
+           <animate attributeName="opacity" from="0.8" to="0" dur="1.4s" repeatCount="indefinite"/></circle>` : "";
+    const sel = filtroSector===n.nombre ? " sel" : "";
+    svg += `<g class="node node-hit${sel}" data-sector="${n.nombre.replace(/"/g,'&quot;')}">
+      ${pulse}
+      <circle cx="${n.x}" cy="${n.y}" r="${r}" fill="${fill}" fill-opacity="${n.consultas?0.32:0.15}" stroke="${fill}" stroke-width="1.5"/>
+      <text x="${n.x}" y="${n.y - r - 6}" text-anchor="middle">${n.nombre}</text>
+      <text class="n" x="${n.x}" y="${n.y+4}" text-anchor="middle">${n.consultas}</text>
+    </g>`;
+  }
+  svg += `</svg>`;
+  $("#mapaSvg").innerHTML = svg;
+  $$(".node-hit","#mapaSvg").forEach(g=>{
+    g.onclick = ()=>{
+      const s = g.dataset.sector;
+      filtroSector = (filtroSector===s) ? null : s;
+      $("#feedFiltro").textContent = filtroSector ? `· ${filtroSector}` : "toca una para leerla completa";
+      renderMapa(sectores);
+      aplicarFiltro();
+    };
+  });
+}
+function $$(s,r=document){ return [...(typeof r==="string"?document.querySelector(r):r).querySelectorAll(s)]; }
+
+/* ---------- alertas ---------- */
+function renderAlertas(alertas){
+  const card = $("#alertas");
+  card.classList.toggle("vacio", alertas.length===0);
+  $("#alertasCount").textContent = alertas.length ? `${alertas.length} sin atender` : "";
+  $("#alertasList").innerHTML = alertas.map(a=>`
+    <div class="alerta-row">
+      <span class="ic">🚨</span>
+      <div class="txt">
+        <b>${a.tipo} — ${a.nombre||"persona sin registrar"}</b>
+        <small>${a.sector||"sector desconocido"} · ${fmtFecha(a.ts)}</small>
+      </div>
+      <button data-id="${a.id}">Marcar atendida</button>
+    </div>`).join("");
+  $$(".alerta-row button","#alertasList").forEach(b=>{
+    b.onclick = async ()=>{ await api(`/api/panel/alerta/${b.dataset.id}/atender`,{method:"POST"}); tick(); };
+  });
+  if(alertasPrev >= 0 && alertas.length > alertasPrev) beep();
+  alertasPrev = alertas.length;
+}
+
+let actx=null;
+function beep(){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    o.frequency.value=880; g.gain.value=0.08;
+    o.start(); o.frequency.setValueAtTime(660, actx.currentTime+0.12);
+    o.stop(actx.currentTime+0.24);
+  }catch{}
+}
+
+/* ---------- feed de conversaciones ---------- */
+const escAttr = s => (s||"").replace(/"/g,'&quot;');
+function convHTML(c){
+  const nuevo = !primeraCarga && !vistos.has(c.id);
+  vistos.add(c.id);
+  const emg = c.es_emergencia ? ' <span class="badge" style="color:var(--danger)">emergencia</span>' : "";
+  return `<button class="conv ${nuevo?'nuevo':''}" data-id="${escAttr(c.id)}"
+      data-sector="${escAttr(c.sector||'Sin sector')}">
+    <div class="conv-h">
+      <span class="titulo">${c.titulo || c.motivo || "Consulta"}</span>
+      <time>${fmtFecha(c.actualizada_ts)}</time>
+    </div>
+    <div class="conv-sub">
+      <b>${c.nombre||"Sin registrar"}</b> · ${c.sector||"—"}
+      <span class="pill ${c.prioridad}">${c.prioridad}</span>
+      <span class="badge">${c.n_turnos} mensaje${c.n_turnos!==1?'s':''}</span>${emg}
+    </div>
+    <div class="conv-prev">${(c.preview||"").replace(/</g,"&lt;")}</div>
+  </button>`;
+}
+function renderConversaciones(convs){
+  $("#feed").innerHTML = convs.map(convHTML).join("")
+    || `<div class="empty">Sin conversaciones todavía.</div>`;
+  $$(".conv","#feed").forEach(b=> b.onclick = ()=> abrirConversacion(b.dataset.id));
+  aplicarFiltro();
+  primeraCarga = false;
+}
+function aplicarFiltro(){
+  $$(".conv","#feed").forEach(e=>{
+    e.style.display = (!filtroSector || e.dataset.sector===filtroSector) ? "" : "none";
+  });
+}
+
+function turnosHTML(turnos){
+  return `<div class="turnos">${(turnos||[]).map(t=>`
+    <div class="turno ${t.rol==='user'?'user':'bot'}">${(t.texto||"").replace(/</g,"&lt;")}</div>
+  `).join("")}</div>`;
+}
+
+async function abrirConversacion(id){
+  const c = await api("/api/panel/conversacion/"+encodeURIComponent(id));
+  const bytes = c.intercambios.reduce((a,x)=>a+(x.bytes_aire||0),0);
+  $("#drawerBody").innerHTML = `
+    <div class="conv-open-h">
+      <b>${c.titulo || c.motivo || "Consulta"}</b>
+      <span class="pill ${c.prioridad}">${c.prioridad}</span>
+    </div>
+    <div class="meta">${c.nombre||"Sin registrar"} · ${c.sector||"—"}
+      · ${fmtFecha(c.iniciada_ts)}${c.iniciada_ts!==c.actualizada_ts?` → ${fmtFecha(c.actualizada_ts)}`:""}
+      <br><span class="mono" style="font-size:.72rem;color:var(--ink-3)">${c.mac} · ${c.id}</span></div>
+    ${turnosHTML(c.transcripcion)}
+    ${c.intercambios.length?`<p class="turno-meta">📡 ${c.intercambios.length} intercambio(s) por el enlace · ${bytes} B al aire en total</p>`:""}`;
+  $("#drawer").classList.add("open");
+}
+
+/* ---------- buscador + drawer ---------- */
+let qTimer=null;
+$("#q").addEventListener("input", e=>{
+  clearTimeout(qTimer);
+  const v = e.target.value.trim();
+  qTimer = setTimeout(async ()=>{
+    if(!v){ $("#res").innerHTML=""; return; }
+    const {pacientes} = await api("/api/panel/buscar?q="+encodeURIComponent(v));
+    $("#res").innerHTML = pacientes.map(p=>`
+      <button data-mac="${p.mac}">
+        <span style="color:var(--ink)"><b>${p.nombre||"Sin nombre"}</b> · ${p.sector||"—"}</span>
+        <span>${p.conversaciones} conversación${p.conversaciones!==1?'es':''}${p.ultima_ts?` · ${fmtFecha(p.ultima_ts)}`:''}</span>
+      </button>`).join("") || `<div class="empty">Nadie coincide.</div>`;
+    $$(".res button","#res").forEach(b=> b.onclick = ()=>abrirPaciente(b.dataset.mac));
+  }, 220);
+});
+
+async function abrirPaciente(mac){
+  const d = await api("/api/panel/paciente/"+encodeURIComponent(mac));
+  const p = d.perfil;
+  const cs = d.conversaciones || [];
+  $("#drawerBody").innerHTML = `
+    <h2>${p.nombre||"Sin nombre"}</h2>
+    <div class="meta">${[p.edad&&(p.edad+" años"), p.sector, p.alergias&&("alergias: "+p.alergias)].filter(Boolean).join(" · ")}
+      <br><span class="mono" style="font-size:.75rem;color:var(--ink-3)">${p.mac}</span></div>
+    <h3 style="font-size:.95rem;margin-bottom:10px">Conversaciones (${cs.length})</h3>
+    <div class="hist">
+      ${cs.map(c=>`
+        <div class="item ${c.es_emergencia?'emergencia':''}">
+          <div class="h"><b>${c.titulo||c.motivo||"consulta"}</b>
+            <span class="pill ${c.prioridad}">${c.prioridad}</span>
+            <time>${fmtFecha(c.actualizada_ts)}</time></div>
+          <p>${(c.preview||"").slice(0,200).replace(/</g,"&lt;")}${(c.preview||"").length>200?"…":""}</p>
+          <button class="verconv" data-id="${escAttr(c.id)}"
+            style="margin-top:5px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;
+            padding:4px 9px;font:inherit;font-size:.78rem;color:var(--accent);cursor:pointer">
+            leer completa (${c.n_turnos} mensajes)</button>
+        </div>`).join("") || `<div class="empty">Sin conversaciones.</div>`}
+    </div>`;
+  $$(".verconv","#drawerBody").forEach(b=> b.onclick = ()=> abrirConversacion(b.dataset.id));
+  $("#drawer").classList.add("open");
+}
+$("#drawerX").onclick = ()=> $("#drawer").classList.remove("open");
+
+/* ---------- loop ---------- */
+async function tick(){
+  try{
+    const [r, f] = await Promise.all([
+      api("/api/panel/resumen"),
+      api("/api/panel/feed"),
+    ]);
+    renderStats(r);
+    renderMapa(r.sectores);
+    renderAlertas(f.alertas);
+    renderConversaciones(f.conversaciones || []);
+  }catch(e){ /* hub reiniciando */ }
+}
+tick();
+setInterval(tick, 3500);
+</script>
+</body>
+</html>

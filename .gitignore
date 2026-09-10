@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Datos generados en runtime (SQLite del registro) — se recrean con seed_demo.py
+hub/data/*.db
+hub/data/*.db-journal
+hub/data/*.db-wal
+hub/data/*.db-shm
+
+# Editor / SO
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Salidas locales
+*.log
+/scratch/

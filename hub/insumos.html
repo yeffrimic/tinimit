@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tinimit — Insumos de la aldea</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#12140f; --panel:#1a1d16; --panel-2:#20241b; --line:#2f3428;
+    --ink:#eef0e6; --ink-2:#a6ac97; --ink-3:#767c68;
+    --accent:#6fb98f; --accent-soft:#1f2c24;
+    --warn:#e2b23c; --warn-soft:#33290f;
+    --danger:#e5695b; --danger-soft:#3a1f1c;
+    /* colores por categoría de insumo */
+    --c-analgesico:#6fb98f; --c-rehidratacion:#5aa9c7; --c-suplemento:#b78fd1;
+    --c-antiparasitario:#c7a15a; --c-antibiotico:#e5695b; --c-alergia:#d68fae;
+    --c-curacion:#8fb0d1; --c-insumo:#9aa08a; --c-casero:#c9b06a;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-ui:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
+    font-size:15px;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0}
+  .mono{font-family:var(--font-mono)}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 16px 64px}
+  .card h2 .count,.stat span{overflow-wrap:anywhere}
+  .como .flow{overflow-wrap:anywhere}
+
+  .top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;
+    padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .top h1{font-size:1.3rem;display:flex;align-items:center;gap:9px}
+  .nav{display:flex;gap:14px;font-size:.85rem}
+  .nav a{color:var(--ink-2);text-decoration:none}
+  .nav a:hover{color:var(--accent)}
+  .nav a.aqui{color:var(--ink);font-weight:600;pointer-events:none}
+  .stats{display:flex;gap:22px;flex-wrap:wrap;margin-left:auto}
+  .stat{display:flex;flex-direction:column;line-height:1.15}
+  .stat b{font-family:var(--font-mono);font-size:1.3rem;font-weight:500}
+  .stat span{font-size:.7rem;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+  .stat.mala b{color:var(--danger)}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start}
+  @media (max-width:1000px){.layout{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h2{font-size:1rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h2 .count{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-2);font-weight:400}
+
+  /* filtros */
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{font-size:.74rem;padding:3px 9px;border-radius:999px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--ink-2);cursor:pointer;user-select:none;
+    display:flex;align-items:center;gap:5px}
+  .chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .chip.off{opacity:.4}
+  .chip:hover{border-color:var(--ink-3)}
+
+  /* grafo */
+  #graf{width:100%;height:auto;display:block;touch-action:none;
+    background:radial-gradient(circle at 50% 42%, #191d15, var(--panel) 72%);
+    border-radius:10px}
+  #graf .link{stroke:var(--ink-3);stroke-opacity:.45;stroke-width:1.4}
+  #graf .link.lejos{stroke:var(--warn);stroke-opacity:.55;stroke-dasharray:5 4}
+  #graf .link.hot{stroke:var(--accent);stroke-opacity:.95;stroke-width:2}
+  #graf .link.mute{stroke-opacity:.07}
+  #graf .nlabel{font-family:var(--font-ui);font-size:10.5px;fill:var(--ink-2);
+    pointer-events:none;paint-order:stroke;stroke:#12140f;stroke-width:3px;stroke-linejoin:round}
+  #graf .node{cursor:pointer}
+  #graf .node .plabel{font-size:12px;fill:var(--ink);font-weight:600}
+  #graf .node.sector .slabel{font-size:10px;fill:var(--ink-3);font-weight:400}
+  #graf .nqty{font-family:var(--font-mono);font-size:9px;fill:var(--ink-3);
+    pointer-events:none;paint-order:stroke;stroke:#12140f;stroke-width:3px;stroke-linejoin:round}
+  #graf .node.mute{opacity:.2}
+  #graf .node.sel circle{stroke:#fff;stroke-width:2.5}
+  #graf .ic{font-size:19px;pointer-events:none}
+  .leyenda{display:flex;gap:12px 16px;flex-wrap:wrap;font-size:.74rem;color:var(--ink-2);margin-top:10px}
+  .leyenda i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+  .leyenda i.ring{background:none;border:2px solid var(--warn);width:10px;height:10px}
+
+  .hint{font-size:.8rem;color:var(--ink-3);margin-top:8px}
+
+  /* explicación */
+  .como{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:16px}
+  .como h3{font-size:.9rem;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.04em;
+    color:var(--ink-2);margin-bottom:8px}
+  .como ol{margin:0;padding-left:18px}
+  .como li{margin-bottom:7px;font-size:.86rem;color:var(--ink-2)}
+  .como li b{color:var(--ink)}
+  .como .flow{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-3);margin-top:8px}
+
+  /* detalle */
+  #detalle{min-height:120px}
+  #detalle .d-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  #detalle .d-head b{font-size:1.02rem}
+  .tag{font-size:.64rem;text-transform:uppercase;letter-spacing:.03em;padding:1px 6px;border-radius:6px;
+    background:var(--accent-soft);color:var(--accent)}
+  .tag.lejos{background:var(--warn-soft);color:var(--warn)}
+  #detalle .d-sub{font-size:.8rem;color:var(--ink-3);margin-bottom:10px}
+  .stock{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line);font-size:.86rem}
+  .stock:last-child{border-bottom:none}
+  .stock .nm{flex:1;min-width:0}
+  .stock .nm small{display:block;color:var(--ink-3);font-size:.73rem}
+  .stock .qty{font-family:var(--font-mono);min-width:66px;text-align:right}
+  .stock.out{opacity:.6}
+  .stock.out .qty{color:var(--danger);font-weight:600}
+  .stock button{width:24px;height:24px;border-radius:6px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink);cursor:pointer;font:inherit;line-height:1;flex:none}
+  .stock button:hover{border-color:var(--accent)}
+  .donde{margin:3px 0;font-size:.85rem}
+  .donde .p{color:var(--ink)}
+  .donde .q{font-family:var(--font-mono);color:var(--ink-2)}
+  .donde.out .q{color:var(--danger)}
+  .cercania{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  .cercania .row{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;padding:3px 0}
+  .cercania .row span{color:var(--ink-2)}
+  .cercania .row .no{color:var(--danger)}
+  .placeholder{color:var(--ink-3);font-size:.86rem}
+
+  /* sectores */
+  .sec{padding:8px 0;border-bottom:1px solid var(--line)}
+  .sec:last-child{border-bottom:none}
+  .sec b{font-size:.88rem}
+  .sec .cadena{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;align-items:center}
+  .cerca-det{margin-top:6px}
+  .cerca-det summary{cursor:pointer;font-size:.76rem;color:var(--ink-3)}
+  .cerca-det summary:hover{color:var(--accent)}
+  .cerca-det .donde{margin:4px 0 0 12px;font-size:.82rem}
+  .pchip{font-size:.72rem;padding:2px 8px;border-radius:999px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--ink-2);cursor:pointer}
+  .pchip.lejos{border-color:var(--warn-soft);color:var(--warn)}
+  .pchip:hover{border-color:var(--accent);color:var(--ink)}
+  .sec .arrow{color:var(--ink-3);font-size:.7rem}
+
+  /* hierbas / no hay */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+  @media (max-width:760px){.grid2{grid-template-columns:1fr}}
+  .hierba{padding:8px 0;border-bottom:1px solid var(--line);font-size:.83rem}
+  .hierba:last-child{border-bottom:none}
+  .hierba b{text-transform:capitalize}
+  .hierba .u{color:var(--ink-2)}
+  .hierba .p{color:var(--warn);font-size:.78rem}
+  .evitar{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--danger-soft);
+    color:var(--danger);font-size:.78rem}
+  .nohay li{font-size:.84rem;color:var(--ink-2);margin-bottom:5px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:var(--accent);color:#0d140f;font-weight:600;font-size:.84rem;padding:9px 16px;
+    border-radius:10px;opacity:0;transition:.25s;pointer-events:none;z-index:40}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>📦 <span>Tinimit</span> · <span style="font-family:var(--font-ui);font-weight:400;color:var(--ink-2);font-size:.9rem">Insumos de la aldea</span></h1>
+    <nav class="nav">
+      <a href="/panel">Panel</a>
+      <a class="aqui" href="/insumos">📦 Insumos</a>
+      <a href="/">Kiosko</a>
+    </nav>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2>Mapa de la aldea <span class="count">toca un lugar para ver qué medicina tiene</span></h2>
+        <svg id="graf" viewBox="0 0 720 520" role="img" aria-label="Mapa de lugares con medicina en la aldea"></svg>
+        <div class="leyenda" id="leyenda"></div>
+        <div class="hint">La <b>aldea</b> va al centro y los <b>lugares con medicina</b> alrededor. Toca un lugar para ver <b>qué tiene</b> y editar sus cantidades. El <b>puesto de salud</b> queda lejos (a ~2&nbsp;h a pie), por eso está fuera del círculo. Abajo, de qué se surte cada localidad.</div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>De dónde se surte cada localidad <span class="count">del más cercano al más lejano</span></h2>
+        <div id="sectores"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h2 id="detTitulo">Detalle</h2>
+        <div id="detalle"><p class="placeholder">Toca un lugar del mapa para ver qué medicina tiene.</p></div>
+      </div>
+
+      <div class="como">
+        <h3>Cómo se administran</h3>
+        <ol>
+          <li>Cada <b>lugar</b> (minifarmacia, botiquín comunitario, promotora, tienda, puesto de salud) tiene <b>su propio inventario</b>. No es una sola bodega.</li>
+          <li>Editar con <b>−&nbsp;/&nbsp;+</b> cambia primero el nodo de la aldea y luego <b>sincroniza al hub</b> del puesto de salud.</li>
+          <li>Cuando alguien consulta en el kiosko, la IA recibe <b>solo lo que hay cerca de su localidad</b> — nunca manda a alguien 2&nbsp;h al puesto de salud por algo que hay en su minifarmacia.</li>
+          <li>Lo que está en <b style="color:var(--danger)">0</b> (rojo) la IA lo trata como <b>no disponible</b>.</li>
+        </ol>
+        <div class="flow">kiosko&nbsp;→&nbsp;device.db&nbsp;(aldea)&nbsp;→&nbsp;sync&nbsp;→&nbsp;hub.db&nbsp;(puesto de salud)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Hierbas de la zona <span class="count" id="nHierbas"></span></h2>
+      <div id="hierbas"></div>
+      <div class="evitar" id="hierbasEvitar"></div>
+    </div>
+    <div class="card">
+      <h2>No hay en la aldea <span class="count">se resuelve en el municipio / hospital</span></h2>
+      <ul class="nohay" id="nohay"></ul>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const SVGNS = "http://www.w3.org/2000/svg";
+const api = (p,opt)=>fetch(p,opt).then(r=>r.json());
+
+const TIPO_LABEL = {puesto_salud:"puesto de salud", minifarmacia:"minifarmacia",
+  botiquin:"botiquín comunitario", promotor:"promotora de salud", tienda:"tienda"};
+const TIPO_IC = {puesto_salud:"🏥", minifarmacia:"💊", botiquin:"🧰", promotor:"👩🏽‍⚕️", tienda:"🏪"};
+const CAT_LABEL = {analgesico:"analgésico", rehidratacion:"rehidratación", suplemento:"suplemento",
+  antiparasitario:"antiparasitario", antibiotico:"antibiótico", alergia:"alergia",
+  curacion:"curación", insumo:"insumo", casero:"casero"};
+const catColor = c => getComputedStyle(document.documentElement).getPropertyValue("--c-"+c).trim() || "var(--ink-3)";
+
+const corto = s => (s||"").split(/ tableta| jarabe| \d| \(/)[0].trim() ||
+                    (s||"").split(/ \(/)[0].trim();
+const esc = s => (s||"").replace(/"/g,'&quot;');
+
+let DATA = null;              // respuesta cruda de /api/panel/recursos
+let G = {nodes:[], links:[], byId:new Map()};
+let sel = null;               // id de nodo seleccionado
+let hoverId = null;           // id de nodo bajo el cursor
+let alpha = 1, running = false, drag = null;
+
+/* ---------------- construir grafo: la aldea al centro y los lugares con
+   medicina en círculo alrededor. Layout fijo (nada de física rara), sólo
+   se pueden arrastrar. --------------------------------------------------- */
+const VB_W = 720, VB_H = 520, CX = 360, CY = 258, R_ANILLO = 172;
+
+function construir(){
+  const prevPos = new Map(G.nodes.map(n=>[n.id,[n.x,n.y,n.vx,n.vy]]));
+  const nodes = [], links = [], byId = new Map();
+
+  const hub = {id:"ALDEA", kind:"aldea", label:"Aldea San Miguel",
+    r:22, m:16, anclado:true, x:CX, y:CY, vx:0, vy:0};
+  nodes.push(hub); byId.set(hub.id, hub);
+
+  // los cercanos primero, el puesto de salud lejano de último
+  const orden = [...DATA.puntos].sort((a,b)=> (a.lejos?1:0)-(b.lejos?1:0));
+  const nP = orden.length;
+  orden.forEach((p,i)=>{
+    const inv = p.inventario;
+    const agotados = inv.filter(x=>x.cantidad<=0).length;
+    const ang = -Math.PI/2 + i/nP * Math.PI*2;
+    const rad = R_ANILLO * (p.lejos ? 1.24 : 1);
+    const n = {
+      id:"P:"+p.id, kind:"punto", punto:p, label:p.nombre, tipo:p.tipo,
+      lejos:!!p.lejos, r:25, m:9, anclado:true,
+      x:CX+Math.cos(ang)*rad, y:CY+Math.sin(ang)*rad, vx:0, vy:0,
+      agotados, total:inv.length, enStock:inv.length-agotados,
+      salud: p.lejos ? "lejos" : agotados===0 ? "ok" : agotados<=2 ? "medio" : "bajo",
+    };
+    nodes.push(n); byId.set(n.id, n);
+    links.push({s:n.id, t:"ALDEA", tipo: p.lejos ? "lejos" : "sirve"});
+  });
+
+  for(const n of nodes){ const pp = prevPos.get(n.id); if(pp){ [n.x,n.y,n.vx,n.vy] = pp; } }
+  G = {nodes, links, byId};
+}
+
+/* ---------------- física: cada lugar tiende a su sitio ("home"); la repulsión
+   solo resuelve solapes. Sencillo y estable con tan pocos nodos. ------------ */
+function fijo(n){ return (n.anclado && n!==drag); }
+function paso(){
+  const K_REP=5200, K_HOME=0.05;
+  const N = G.nodes;
+  for(const n of N){ n.fx=0; n.fy=0; }
+  for(let i=0;i<N.length;i++){
+    for(let j=i+1;j<N.length;j++){
+      const a=N[i], b=N[j];
+      let dx=b.x-a.x, dy=b.y-a.y, d2=dx*dx+dy*dy;
+      if(d2<0.01){ dx=Math.random()-.5; dy=Math.random()-.5; d2=1; }
+      const d=Math.sqrt(d2), min=a.r+b.r+30;
+      let f=K_REP*(a.m+b.m)/d2;
+      if(d<min) f+=(min-d)*0.9;
+      const fx=dx/d*f, fy=dy/d*f;
+      a.fx-=fx; a.fy-=fy; b.fx+=fx; b.fy+=fy;
+    }
+  }
+  for(const n of N){
+    if(fijo(n)){ n.vx=n.vy=0; continue; }
+    if(n.home){ n.fx+=(n.home.x-n.x)*K_HOME; n.fy+=(n.home.y-n.y)*K_HOME; }
+    n.vx=(n.vx+n.fx)*0.80; n.vy=(n.vy+n.fy)*0.80;
+    n.x+=n.vx*alpha; n.y+=n.vy*alpha;
+    n.x=Math.max(70,Math.min(VB_W-70,n.x));
+    n.y=Math.max(40,Math.min(VB_H-30,n.y));
+  }
+  alpha*=0.972;
+  if(alpha<0.02 && !drag){ alpha=0; running=false; }
+}
+
+function loop(){
+  if(running || drag){ paso(); dibujar(); requestAnimationFrame(loop); }
+  else { dibujar(); }
+}
+function calentar(a=0.9){ alpha=Math.max(alpha,a); if(!running){ running=true; requestAnimationFrame(loop); } }
+
+/* ---------------- dibujo ---------------- */
+let elLinks=new Map(), elNodes=new Map();
+function montar(){
+  const svg=$("#graf"); svg.innerHTML="";
+  elLinks=new Map(); elNodes=new Map();
+  const gL=document.createElementNS(SVGNS,"g");
+  const gN=document.createElementNS(SVGNS,"g");
+  svg.append(gL,gN);
+
+  G.links.forEach((l,i)=>{
+    const ln=document.createElementNS(SVGNS,"line");
+    ln.setAttribute("class","link"+(l.tipo==="lejos"?" lejos":""));
+    gL.append(ln); elLinks.set(i,ln);
+  });
+  for(const n of G.nodes){
+    const g=document.createElementNS(SVGNS,"g");
+    g.setAttribute("class","node "+n.kind);
+    const c=document.createElementNS(SVGNS,"circle");
+    c.setAttribute("r",n.r);
+    const t=document.createElementNS(SVGNS,"text");
+    t.setAttribute("text-anchor","middle");
+
+    if(n.kind==="punto"){
+      const col = n.salud==="ok" ? "var(--accent)" : n.salud==="bajo" ? "var(--danger)" : "var(--warn)";
+      c.setAttribute("fill","var(--panel-2)");
+      c.setAttribute("stroke",col); c.setAttribute("stroke-width","2.5");
+      if(n.lejos) c.setAttribute("stroke-dasharray","4 3");
+      const ic=document.createElementNS(SVGNS,"text");
+      ic.setAttribute("class","ic"); ic.setAttribute("text-anchor","middle");
+      ic.setAttribute("dy","6"); ic.textContent=TIPO_IC[n.tipo]||"•";
+      t.setAttribute("class","nlabel plabel"); t.setAttribute("dy",-n.r-8); t.textContent=n.label;
+      const q=document.createElementNS(SVGNS,"text");
+      q.setAttribute("class","nqty"); q.setAttribute("text-anchor","middle");
+      q.setAttribute("dy",n.r+15);
+      q.textContent = n.lejos ? "queda lejos" : `${n.enStock}/${n.total} con stock`;
+      g.append(c,ic,t,q);
+    } else if(n.kind==="sector"){
+      c.setAttribute("fill","var(--ink-3)"); c.setAttribute("fill-opacity",".16");
+      c.setAttribute("stroke","var(--ink-3)"); c.setAttribute("stroke-width","1.2");
+      t.setAttribute("class","nlabel slabel"); t.setAttribute("dy",-n.r-5); t.textContent=n.label;
+      g.append(c,t);
+    } else { // aldea
+      c.setAttribute("fill","var(--panel-2)"); c.setAttribute("stroke","var(--ink-2)");
+      c.setAttribute("stroke-width","1.5");
+      const ic=document.createElementNS(SVGNS,"text");
+      ic.setAttribute("class","ic"); ic.setAttribute("text-anchor","middle");
+      ic.setAttribute("dy","5"); ic.textContent="🏘️";
+      t.setAttribute("class","nlabel plabel"); t.setAttribute("dy",-n.r-7); t.textContent=n.label;
+      g.append(c,ic,t);
+    }
+    g.addEventListener("pointerdown",e=>iniciarDrag(e,n));
+    g.addEventListener("click",()=>{ if(!drag||!drag._moved) seleccionar(n.id); });
+    g.addEventListener("pointerenter",()=>{ if(!drag){ hoverId=n.id; dibujar(); }});
+    g.addEventListener("pointerleave",()=>{ if(hoverId===n.id){ hoverId=null; dibujar(); }});
+    gN.append(g); elNodes.set(n.id,g);
+  }
+  dibujar();
+}
+
+function vecinosDe(id){
+  const s=new Set([id]);
+  for(const l of G.links){ if(l.s===id) s.add(l.t); if(l.t===id) s.add(l.s); }
+  return s;
+}
+
+function dibujar(){
+  const foco = sel || hoverId;
+  const vecinos = foco ? vecinosDe(foco) : null;
+  G.links.forEach((l,i)=>{
+    const ln=elLinks.get(i); const a=G.byId.get(l.s), b=G.byId.get(l.t);
+    ln.setAttribute("x1",a.x); ln.setAttribute("y1",a.y);
+    ln.setAttribute("x2",b.x); ln.setAttribute("y2",b.y);
+    let cls="link"+(l.tipo==="lejos"?" lejos":"");
+    if(foco) cls += (l.s===foco||l.t===foco) ? " hot" : " mute";
+    ln.setAttribute("class",cls);
+  });
+  for(const n of G.nodes){
+    const g=elNodes.get(n.id);
+    g.setAttribute("transform",`translate(${n.x} ${n.y})`);
+    let cls="node "+n.kind;
+    if(n.id===sel) cls+=" sel";
+    if(foco && !vecinos.has(n.id)) cls+=" mute";
+    g.setAttribute("class",cls);
+  }
+}
+
+/* ---------------- drag ---------------- */
+function svgPunto(e){
+  const svg=$("#graf"), r=svg.getBoundingClientRect();
+  return [ (e.clientX-r.left)/r.width*VB_W, (e.clientY-r.top)/r.height*VB_H ];
+}
+function iniciarDrag(e,n){
+  e.preventDefault();
+  drag=n; n._moved=false;
+  const [mx,my]=svgPunto(e); n._dx=n.x-mx; n._dy=n.y-my;
+  calentar(0.35);
+  window.addEventListener("pointermove",moverDrag);
+  window.addEventListener("pointerup",soltarDrag,{once:true});
+}
+function moverDrag(e){
+  if(!drag) return;
+  const [mx,my]=svgPunto(e);
+  drag.x=mx+drag._dx; drag.y=my+drag._dy; drag.vx=0; drag.vy=0;
+  drag._moved=true; calentar(0.3);
+}
+function soltarDrag(){
+  window.removeEventListener("pointermove",moverDrag);
+  const d=drag; drag=null;
+  if(d) setTimeout(()=>{ d._moved=false; },0);
+  calentar(0.2);
+}
+
+/* ---------------- selección + detalle ---------------- */
+function seleccionar(id){
+  sel = (sel===id) ? null : id;
+  dibujar();
+  renderDetalle();
+}
+$("#graf").addEventListener("click",e=>{ if(e.target.id==="graf"){ sel=null; dibujar(); renderDetalle(); }});
+
+function renderDetalle(){
+  const box=$("#detalle"), tit=$("#detTitulo");
+  if(!sel){ tit.textContent="Detalle";
+    box.innerHTML=`<p class="placeholder">Toca un lugar del mapa para ver qué medicina tiene.</p>`; return; }
+  const n=G.byId.get(sel);
+  if(!n){ sel=null; return renderDetalle(); }
+  const byId=Object.fromEntries(DATA.puntos.map(p=>[p.id,p]));
+
+  if(n.kind==="punto"){
+    const p=n.punto;
+    tit.textContent="Lugar con medicina";
+    const inv=[...p.inventario].sort((a,b)=>(a.cantidad<=0)-(b.cantidad<=0)||a.item.localeCompare(b.item));
+    box.innerHTML=`
+      <div class="d-head"><b>${TIPO_IC[p.tipo]||""} ${p.nombre}</b>
+        <span class="tag ${p.lejos?'lejos':''}">${TIPO_LABEL[p.tipo]||p.tipo}</span></div>
+      <div class="d-sub">${p.sector} · ${p.distancia}${p.lejos?' — la IA lo usa solo como último recurso':''}</div>
+      ${inv.map(x=>`
+        <div class="stock ${x.cantidad<=0?'out':''}">
+          <div class="nm">${x.item}<small>${x.para||""}</small></div>
+          <button data-i="${esc(x.item)}" data-d="-1" aria-label="quitar">−</button>
+          <span class="qty">${x.cantidad} ${x.unidad||""}</span>
+          <button data-i="${esc(x.item)}" data-d="1" aria-label="agregar">+</button>
+        </div>`).join("")}`;
+    $$(".stock button",box).forEach(b=> b.onclick=()=>{
+      const row=b.closest(".stock");
+      const cur=parseInt(row.querySelector(".qty").textContent)||0;
+      ajustar(p.id, b.dataset.i, Math.max(0,cur+parseInt(b.dataset.d)));
+    });
+  } else { // aldea
+    tit.textContent="Aldea San Miguel";
+    const items=new Set(); let agot=0;
+    DATA.puntos.forEach(p=>p.inventario.forEach(x=>{ items.add(x.item); if(x.cantidad<=0) agot++; }));
+    box.innerHTML=`
+      <div class="d-sub">Toca un <b>lugar</b> del mapa para ver y editar su medicina. Abajo está de qué se surte cada localidad.</div>
+      <div class="cercania">
+        <div class="row"><span>Lugares con medicina</span><span>${DATA.puntos.length}</span></div>
+        <div class="row"><span>Localidades</span><span>${DATA.sectores.length}</span></div>
+        <div class="row"><span>Medicinas distintas</span><span>${items.size}</span></div>
+        <div class="row"><span>Renglones agotados</span><span class="${agot?'no':''}">${agot}</span></div>
+      </div>`;
+  }
+}
+
+async function ajustar(puntoId, item, cantidad){
+  await api(`/api/panel/recursos/${encodeURIComponent(puntoId)}/${encodeURIComponent(item)}?cantidad=${cantidad}`,{method:"POST"});
+  toast(`${corto(item)} en ${nombrePunto(puntoId)} → ${cantidad} · sincronizado al hub`);
+  await cargar(true);
+}
+const nombrePunto = id => (DATA.puntos.find(p=>p.id===id)||{}).nombre || id;
+
+/* ---------------- leyenda ---------------- */
+function renderLeyenda(){
+  $("#leyenda").innerHTML =
+    Object.keys(TIPO_IC).map(k=>`<span>${TIPO_IC[k]} ${TIPO_LABEL[k]}</span>`).join("") +
+    `<span><i style="background:var(--accent)"></i>con todo en stock</span>` +
+    `<span><i style="background:var(--warn)"></i>con faltantes o lejano</span>` +
+    `<span><i style="background:var(--danger)"></i>varios agotados</span>`;
+}
+
+/* ---------------- sectores ---------------- */
+function renderSectores(){
+  const byId=Object.fromEntries(DATA.puntos.map(p=>[p.id,p]));
+  $("#sectores").innerHTML = DATA.sectores.map(s=>{
+    const ids=(DATA.cobertura||{})[s]||[];
+    const cadena=ids.map(pid=>byId[pid]).filter(Boolean);
+    const chips=cadena.map((p,k)=>
+      `${k?'<span class="arrow">▸</span>':''}<span class="pchip ${p.lejos?'lejos':''}" data-p="${esc(p.id)}">${TIPO_IC[p.tipo]||""} ${p.nombre}</span>`
+    ).join("");
+    // qué se consigue cerca (sin contar el puesto lejano), local primero
+    const disp=new Map();
+    cadena.filter(p=>!p.lejos).forEach((p,k)=>p.inventario.forEach(x=>{
+      if(x.cantidad>0 && !disp.has(x.item)) disp.set(x.item,{nom:p.nombre,orden:k});
+    }));
+    const lista=[...disp.entries()].sort((a,b)=> a[1].orden-b[1].orden || a[0].localeCompare(b[0]));
+    return `<div class="sec"><b>${s}</b>
+      <div class="cadena">${chips||'<span class="placeholder">sin lugares cercanos</span>'}</div>
+      <details class="cerca-det"><summary>qué se consigue cerca (${lista.length})</summary>
+        ${lista.map(([it,v])=>`<div class="donde"><span class="p">${it}</span><span class="q"> — ${v.nom}</span></div>`).join("")
+          || '<span class="placeholder">nada cerca — solo el puesto de salud</span>'}
+      </details></div>`;
+  }).join("");
+  $$("#sectores .pchip").forEach(ch=> ch.onclick=()=> seleccionar("P:"+ch.dataset.p));
+}
+
+/* ---------------- hierbas / no hay ---------------- */
+function renderExtras(){
+  $("#nHierbas").textContent = DATA.hierbas.length + " · uso tradicional seguro";
+  $("#hierbas").innerHTML = DATA.hierbas.map(h=>`
+    <div class="hierba"><b>${h.nombre}</b> — ${h.para}
+      <div class="u">Cómo: ${h.uso}</div>
+      <div class="p">⚠ ${h.precaucion}</div></div>`).join("");
+  $("#hierbasEvitar").textContent = "No usar nunca: " + DATA.hierbas_evitar.join("; ") + ".";
+  $("#nohay").innerHTML = DATA.no_hay_en_la_aldea.map(x=>`<li>${x}</li>`).join("");
+}
+
+/* ---------------- stats ---------------- */
+function renderStats(){
+  const items = new Set(); let agot = 0;
+  DATA.puntos.forEach(p=>p.inventario.forEach(x=>{ items.add(x.item); if(x.cantidad<=0) agot++; }));
+  const secCubiertas = DATA.sectores.filter(s=>
+    ((DATA.cobertura||{})[s]||[]).some(pid=>{
+      const p = DATA.puntos.find(q=>q.id===pid);
+      return p && !p.lejos;
+    })).length;
+  $("#stats").innerHTML=`
+    <div class="stat"><b>${DATA.puntos.length}</b><span>lugares con medicina</span></div>
+    <div class="stat"><b>${items.size}</b><span>medicinas distintas</span></div>
+    <div class="stat ${agot?'mala':''}"><b>${agot}</b><span>renglones agotados</span></div>
+    <div class="stat"><b>${secCubiertas}/${DATA.sectores.length}</b><span>localidades con lugar cercano</span></div>`;
+}
+
+/* ---------------- carga ---------------- */
+let montado=false;
+async function cargar(refresco){
+  DATA = await api("/api/panel/recursos");
+  construir();
+  if(!montado || !refresco){ montar(); montado=true; calentar(1); }
+  else { montar(); dibujar(); }   // reconstruye elementos, conserva posiciones
+  renderLeyenda(); renderStats(); renderSectores(); renderExtras();
+  if(sel) renderDetalle();
+}
+
+let toastT=null;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+cargar();
+</script>
+</body>
+</html>

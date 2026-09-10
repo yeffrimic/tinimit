@@ -1,0 +1,1434 @@
+<title>Tinimit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg-outer:#EAE6DD;
+  --bg:#F7F5F1;
+  --surface:#FFFFFF;
+  --surface-2:#EFEBE2;
+  --border:#DBD5C7;
+  --ink:#1B211C;
+  --ink-2:#5C6357;
+  --accent:#0E7C6B;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#DBEDE8;
+  --danger:#BF352C;
+  --danger-ink:#FFFFFF;
+  --danger-soft:#F4DEDB;
+  --warn:#A96A16;
+  --warn-soft:#F3E4CE;
+  --maya:#A6295C;
+  --shadow:0 18px 50px -12px rgba(27,33,28,.28);
+
+  --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+  --font-ui:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace;
+
+  --fs-xs:.75rem; --fs-sm:.875rem; --fs-base:1rem; --fs-lg:1.15rem; --fs-xl:1.4rem;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg-outer:#0C0F0A;
+    --bg:#14180F;
+    --surface:#1B2018;
+    --surface-2:#232A20;
+    --border:#343C30;
+    --ink:#EAE8DF;
+    --ink-2:#A4AB9A;
+    --accent:#54C6B1;
+    --accent-ink:#08221D;
+    --accent-soft:#173B35;
+    --danger:#E4665B;
+    --danger-ink:#2A100D;
+    --danger-soft:#3B211E;
+    --warn:#DDA152;
+    --warn-soft:#382C19;
+    --maya:#DA84AC;
+    --shadow:0 18px 50px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg-outer:#0C0F0A;
+  --bg:#14180F;
+  --surface:#1B2018;
+  --surface-2:#232A20;
+  --border:#343C30;
+  --ink:#EAE8DF;
+  --ink-2:#A4AB9A;
+  --accent:#54C6B1;
+  --accent-ink:#08221D;
+  --accent-soft:#173B35;
+  --danger:#E4665B;
+  --danger-ink:#2A100D;
+  --danger-soft:#3B211E;
+  --warn:#DDA152;
+  --warn-soft:#382C19;
+  --maya:#DA84AC;
+  --shadow:0 18px 50px -12px rgba(0,0,0,.6);
+}
+
+/* ============ BASE ============ */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--font-ui);
+  font-size:var(--fs-base);
+  line-height:1.5;
+  color:var(--ink);
+  background:var(--bg-outer);
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px 16px;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;margin:0;text-wrap:balance;line-height:1.2}
+h2{font-size:var(--fs-lg)}
+h3{font-size:var(--fs-base);font-weight:600}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:var(--fs-base);color:var(--ink)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mono{font-family:var(--font-mono);font-size:.92em;letter-spacing:-.01em}
+.i18n-pending{text-decoration:underline dotted var(--maya);text-underline-offset:3px}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+
+/* ============ DEVICE FRAME ============ */
+.device{
+  width:100%;max-width:430px;
+  height:min(880px,calc(100vh - 48px));
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:26px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  position:relative;
+}
+@media (max-width:479px){
+  body{padding:0}
+  .device{max-width:none;height:100vh;height:100dvh;border-radius:0;border:none;box-shadow:none}
+}
+
+/* ============ HEADER ============ */
+.hdr{
+  flex:none;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:12px 14px 10px;
+  display:flex;flex-direction:column;gap:9px;
+}
+.hdr-main{display:flex;align-items:center;gap:10px}
+.hdr-village{
+  font-family:var(--font-display);font-weight:600;font-size:1.05rem;
+  flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.hdr-sub{font-family:var(--font-ui);font-weight:400;font-size:.82rem;color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis}
+.hdr-actions{display:flex;align-items:center;gap:6px}
+.lang{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:999px;padding:5px 10px;font-size:var(--fs-xs);font-weight:600;
+  letter-spacing:.04em;
+}
+.lang-opt{color:var(--ink-2)}
+.lang-opt.is-on{color:var(--accent)}
+.lang-sep{color:var(--border)}
+.icon-btn{
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:10px;width:34px;height:34px;display:grid;place-items:center;
+  font-size:1rem;line-height:1;
+}
+.icon-btn:disabled{opacity:.4;cursor:not-allowed}
+.link-pill{
+  align-self:flex-start;
+  display:inline-flex;align-items:center;gap:7px;
+  background:transparent;border:1px solid var(--border);
+  border-radius:999px;padding:5px 11px;
+  font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--ink-2);
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.link-pill.is-off .dot{background:var(--warn)}
+.link-pill.is-off{color:var(--warn)}
+
+/* ============ Kaqchikel banner ============ */
+.cak-banner{
+  flex:none;
+  background:color-mix(in srgb,var(--maya) 12%,var(--surface));
+  border-bottom:1px solid var(--border);
+  color:var(--ink-2);
+  font-size:var(--fs-xs);
+  padding:8px 14px;
+}
+
+/* ============ SCREEN ============ */
+.screen{
+  flex:1;overflow-y:auto;
+  background:var(--bg);
+  padding:16px 14px 22px;
+  display:flex;flex-direction:column;gap:20px;
+  scroll-behavior:smooth;
+}
+
+/* emergency */
+.emergency{display:flex;flex-direction:column;gap:7px}
+.emergency-btn{
+  width:100%;min-height:76px;
+  background:var(--danger);color:var(--danger-ink);
+  border:none;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  font-weight:700;font-size:1.2rem;letter-spacing:.06em;
+  box-shadow:0 8px 22px -8px color-mix(in srgb,var(--danger) 65%,transparent);
+}
+.emergency-btn:active{transform:translateY(1px)}
+.emergency-btn.pulse{animation:emgpulse .6s ease-in-out 4}
+@keyframes emgpulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--danger) 45%,transparent)}}
+.emergency-icon{font-size:1.5rem;font-weight:400}
+.emergency-sub{margin:0;text-align:center;font-size:var(--fs-xs);color:var(--ink-2)}
+
+/* motivos */
+.motivos{display:flex;flex-direction:column;gap:10px}
+.motivos h2{font-size:var(--fs-base);color:var(--ink-2);font-weight:500;font-family:var(--font-ui);letter-spacing:.02em;text-transform:uppercase}
+.motivo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.motivo{
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:13px 6px 11px;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  min-height:88px;justify-content:center;
+  font-size:var(--fs-sm);font-weight:500;text-align:center;line-height:1.15;
+  transition:border-color .12s,background .12s;
+}
+.motivo .ic{font-size:1.55rem;line-height:1}
+.motivo:hover,.motivo:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.motivo:active{transform:translateY(1px)}
+
+/* el atributo hidden debe ganarle a los display:flex de estas secciones */
+.motivos[hidden],.historial[hidden],.conv-bar[hidden]{display:none}
+
+/* barra de la conversación en curso */
+.conv-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 12px;background:var(--accent-soft);border:1px solid var(--accent);
+  border-radius:12px;position:sticky;top:6px;z-index:5}
+.conv-bar-t{display:flex;align-items:center;gap:7px;min-width:0;font-weight:600;font-size:var(--fs-sm)}
+.conv-bar-ic{font-size:1.1rem;flex:none}
+#convBarTitulo{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conv-bar-n{color:var(--ink-2);font-weight:400;font-size:var(--fs-xs);flex:none}
+.nueva-btn{background:var(--surface);color:var(--accent);border:1px solid var(--accent);
+  border-radius:999px;padding:6px 13px;font:inherit;font-size:var(--fs-xs);font-weight:700;
+  cursor:pointer;text-transform:none;letter-spacing:0;white-space:nowrap;flex:none}
+.nueva-btn:active{transform:translateY(1px)}
+
+/* historial de conversaciones */
+.historial{display:flex;flex-direction:column;gap:9px}
+.historial-h{font-size:var(--fs-base);color:var(--ink-2);font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.historial-list{display:flex;flex-direction:column;gap:8px}
+.hist-item{display:flex;flex-direction:column;gap:3px;
+  padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  font:inherit;text-align:left;cursor:pointer;color:var(--ink);width:100%}
+.hist-item:hover,.hist-item:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.hist-item:active{transform:translateY(1px)}
+.hist-item .hrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.hist-item .ht{font-weight:700;font-size:var(--fs-sm);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.hist-item .hd{font-size:var(--fs-xs);color:var(--ink-2);flex:none}
+.hist-item .hp{font-size:var(--fs-xs);color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-item .hgo{font-size:var(--fs-xs);color:var(--accent);font-weight:600}
+.hist-item.emergencia{border-color:color-mix(in srgb, var(--danger) 45%, var(--border))}
+
+/* chat */
+.chat{display:flex;flex-direction:column;gap:11px;min-height:20px}
+.msg{max-width:84%;display:flex;flex-direction:column;gap:4px}
+.msg .bubble{
+  padding:10px 13px;border-radius:15px;font-size:var(--fs-sm);line-height:1.5;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.user .bubble{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:5px}
+.msg.bot{align-self:flex-start}
+.msg.bot .bubble{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-bottom-left-radius:5px}
+.msg.pending .bubble{opacity:.7}
+.chip{
+  font-family:var(--font-mono);font-size:.68rem;color:var(--ink-2);
+  display:flex;align-items:center;gap:5px;padding:0 3px;
+}
+.sysline{
+  align-self:center;text-align:center;
+  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);padding:2px 0;
+}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;align-self:flex-start;
+  font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;
+}
+.pill.rutina{background:var(--accent-soft);color:var(--accent)}
+.pill.urgente{background:var(--warn-soft);color:var(--warn)}
+.pill.emergencia{background:var(--danger-soft);color:var(--danger)}
+.typing{display:flex;gap:4px;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:15px;border-bottom-left-radius:5px;align-self:flex-start}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--ink-2);opacity:.5;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}
+.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:.9}}
+
+/* ============ COMPOSER ============ */
+.composer{
+  flex:none;display:flex;align-items:center;gap:8px;
+  padding:10px 12px;background:var(--surface);border-top:1px solid var(--border);
+}
+.composer-input{
+  flex:1;min-width:0;padding:11px 13px;border-radius:11px;
+  border:1px solid var(--border);background:var(--bg);
+}
+.composer-input::placeholder{color:var(--ink-2)}
+.send{
+  flex:none;width:44px;height:44px;border-radius:11px;border:none;
+  background:var(--accent);color:var(--accent-ink);font-size:1.1rem;
+  display:grid;place-items:center;
+}
+.send:active{transform:translateY(1px)}
+
+/* ============ DISCLAIMER ============ */
+.disclaimer{
+  flex:none;background:var(--surface-2);border-top:1px solid var(--border);
+  padding:9px 16px;text-align:center;font-size:var(--fs-xs);color:var(--ink-2);
+}
+
+/* ============ OVERLAYS ============ */
+.overlay{
+  position:absolute;inset:0;z-index:20;
+  background:color-mix(in srgb,var(--ink) 45%,transparent);
+  display:grid;place-items:end center;
+  padding:0;
+}
+.overlay[hidden]{display:none}
+.sheet{
+  background:var(--surface);
+  width:100%;
+  border-radius:22px 22px 0 0;
+  border-top:1px solid var(--border);
+  padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+  max-height:94%;overflow-y:auto;
+  display:flex;flex-direction:column;gap:13px;
+  position:relative;
+  animation:slideup .22s ease;
+}
+@keyframes slideup{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+.sheet-x{
+  position:absolute;top:14px;right:14px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:9px;
+  width:32px;height:32px;display:grid;place-items:center;font-size:.9rem;
+}
+.sheet-note{margin:0;font-size:var(--fs-xs);color:var(--ink-2)}
+.sheet form{display:flex;flex-direction:column;gap:11px}
+.sheet label{font-size:var(--fs-sm);font-weight:600;display:block;margin-bottom:4px}
+.sheet input,.sheet select,.sheet textarea{
+  width:100%;padding:10px 12px;border-radius:10px;
+  border:1px solid var(--border);background:var(--bg);
+}
+.sheet textarea{resize:vertical}
+.row-2{display:flex;gap:10px}
+.row-2>*{flex:1;min-width:0}
+.mac-line{margin:2px 0 0;font-size:var(--fs-xs);color:var(--ink-2)}
+.primary-btn{
+  width:100%;padding:13px;border-radius:12px;border:none;
+  background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:var(--fs-base);
+  margin-top:2px;
+}
+.danger-btn{
+  width:100%;padding:15px;border-radius:13px;border:none;
+  background:var(--danger);color:var(--danger-ink);font-weight:700;
+  font-size:1.05rem;letter-spacing:.05em;
+}
+.back{
+  align-self:flex-start;background:none;border:none;color:var(--ink-2);
+  font-size:var(--fs-sm);font-weight:600;padding:2px 0;display:flex;align-items:center;gap:5px;
+}
+
+/* emergency grid */
+.emg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.emg-opt{
+  padding:14px 10px;border-radius:12px;border:1.5px solid var(--border);
+  background:var(--bg);font-size:var(--fs-sm);font-weight:600;text-align:left;line-height:1.2;
+  display:flex;align-items:center;gap:8px;min-height:60px;
+}
+.emg-opt .ic{font-size:1.2rem;flex:none}
+.emg-opt.is-sel{border-color:var(--danger);background:var(--danger-soft);color:var(--danger)}
+.emg-note{margin:0;font-size:var(--fs-xs);color:var(--ink-2)}
+.emg-note strong{color:var(--ink);font-weight:600}
+
+/* relay animation */
+.relay{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 0 2px}
+.relay-node{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:1.5rem;opacity:.32;transition:opacity .3s,transform .3s;
+}
+.relay-node span{font-size:.62rem;font-family:var(--font-ui);font-weight:600;letter-spacing:.03em;color:var(--ink-2)}
+.relay-node.is-active{opacity:1;transform:translateY(-2px)}
+.relay-node.is-active span{color:var(--accent)}
+.relay-wire{flex:1;max-width:46px;height:3px;background:var(--border);border-radius:2px;position:relative;overflow:hidden}
+.relay-wire i{position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .5s ease}
+.relay-wire.is-active i{transform:scaleX(1)}
+.sent-status{margin:0;text-align:center;color:var(--ink-2);font-size:var(--fs-sm)}
+.sent-ok{margin:0;text-align:center;color:var(--accent);font-weight:700;font-size:var(--fs-base)}
+.sent-meta{margin:0;text-align:center}
+.sent-meta .mono{font-size:.7rem;color:var(--ink-2)}
+#sentDetail{display:flex;flex-direction:column;gap:11px}
+#sentDetail ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;font-size:var(--fs-sm)}
+#firstAid li{padding-left:2px}
+.emg-nota{margin:0;padding:9px 11px;border-radius:10px;background:var(--warn-soft);
+  color:var(--ink);font-size:var(--fs-sm);border-left:3px solid var(--warn)}
+
+/* toast */
+.toast{
+  position:absolute;left:50%;bottom:78px;transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);
+  padding:9px 16px;border-radius:999px;font-size:var(--fs-sm);font-weight:500;
+  z-index:40;white-space:nowrap;box-shadow:var(--shadow);
+  animation:slideup .2s ease;
+}
+.toast[hidden]{display:none}
+</style>
+
+<div class="device" id="app">
+  <header class="hdr">
+    <div class="hdr-main">
+      <span class="hdr-village">🏔️ <b>Tinimit</b><span class="hdr-sub" id="villageName"> · Aldea San Miguel</span></span>
+      <div class="hdr-actions">
+        <button class="lang" id="langBtn" type="button" aria-label="Español / K'iche'">
+          <span class="lang-opt is-on" data-lang="es">ES</span><span class="lang-sep">·</span><span class="lang-opt" data-lang="quc">K'ICHE'</span>
+        </button>
+        <button class="icon-btn" id="gearBtn" type="button" data-i18n-title="editarDatos" title="Editar mis datos">⚙</button>
+      </div>
+    </div>
+    <button class="link-pill" id="linkBtn" type="button" title="Tocar para simular caída del enlace">
+      <span class="dot"></span><span id="linkText">Hub: OK · 2 saltos · ~380 ms</span>
+    </button>
+  </header>
+
+  <div class="cak-banner" id="idiomaBanner" hidden data-i18n="idiomaBanner">
+    Traducción kaqchikel en validación con la ALMG. Donde falta, se muestra español (subrayado punteado).
+  </div>
+
+  <main class="screen" id="screen">
+    <section class="emergency">
+      <button class="emergency-btn" id="emergencyBtn" type="button">
+        <span class="emergency-icon" aria-hidden="true">✚</span>
+        <span data-i18n="emergencia">EMERGENCIA</span>
+      </button>
+      <p class="emergency-sub" data-i18n="emergenciaSub">Toca aquí si hay peligro de vida</p>
+    </section>
+
+    <div class="conv-bar" id="convBar" hidden>
+      <div class="conv-bar-t">
+        <span class="conv-bar-ic" aria-hidden="true">💬</span>
+        <span id="convBarTitulo">Consulta</span>
+        <span class="conv-bar-n" id="convBarN"></span>
+      </div>
+      <button type="button" id="nuevaBtn" class="nueva-btn" data-i18n="nuevaConsulta">✚ Nueva consulta</button>
+    </div>
+
+    <section class="motivos" id="motivos">
+      <h2 data-i18n="motivoTitulo">Motivo de consulta</h2>
+      <div class="motivo-grid" id="motivoGrid"></div>
+    </section>
+
+    <section class="historial" id="historial" hidden>
+      <div class="historial-h"><span data-i18n="consultasAnteriores">Consultas anteriores</span></div>
+      <div class="historial-list" id="histList"></div>
+    </section>
+
+    <section class="chat" id="chat" aria-live="polite"></section>
+  </main>
+
+  <form class="composer" id="composer">
+    <label class="sr-only" for="msgInput" data-i18n="escribeLabel">Escribe tu consulta</label>
+    <input id="msgInput" class="composer-input" type="text" autocomplete="off" enterkeyhint="send"
+           data-i18n-ph="escribePlaceholder" placeholder="Escribe aquí tu consulta…">
+    <button class="icon-btn" type="button" disabled data-i18n-title="vozPronto" title="Disponible pronto: dictado por voz">🎤</button>
+    <button class="send" id="sendBtn" type="submit" aria-label="Enviar">➤</button>
+  </form>
+
+  <footer class="disclaimer" data-i18n="disclaimer">
+    Orientación general, no reemplaza a un profesional. Si hay peligro de vida, usa Emergencia.
+  </footer>
+
+  <!-- Registro / perfil -->
+  <div class="overlay" id="regOverlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="regTitle">
+      <button class="sheet-x" id="regClose" type="button" hidden aria-label="Cerrar">✕</button>
+      <h2 id="regTitle" data-i18n="regTitulo">Antes de empezar</h2>
+      <p class="sheet-note" data-i18n="regNota">Sin contraseñas: te identificamos por tu teléfono. Tus datos se guardan solo en este dispositivo y en el hub de la comunidad, nunca en internet.</p>
+      <form id="regForm">
+        <div>
+          <label for="regNombre" data-i18n="campoNombre">Nombre</label>
+          <input id="regNombre" required autocomplete="name">
+        </div>
+        <div class="row-2">
+          <div>
+            <label for="regEdad" data-i18n="campoEdad">Edad</label>
+            <input id="regEdad" type="number" min="0" max="120" inputmode="numeric" required>
+          </div>
+          <div>
+            <label for="regSector" data-i18n="campoSector">Sector / Caserío</label>
+            <select id="regSector"></select>
+          </div>
+        </div>
+        <div>
+          <label for="regNotas" data-i18n="campoNotas">Alergias o condiciones (opcional)</label>
+          <textarea id="regNotas" rows="2" data-i18n-ph="campoNotasPh" placeholder="Ej. alérgico a la penicilina, diabetes…"></textarea>
+        </div>
+        <p class="mac-line"><span data-i18n="idDispositivo">ID de dispositivo</span>: <span id="macView" class="mono"></span></p>
+        <button class="primary-btn" type="submit" data-i18n="guardarContinuar">Guardar y continuar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Emergencia: selección -->
+  <div class="overlay" id="emgOverlay" hidden>
+    <div class="sheet sheet-emg" role="dialog" aria-modal="true" aria-labelledby="emgTitle">
+      <button class="back" id="emgBack" type="button">←&nbsp;<span data-i18n="volver">Volver</span></button>
+      <h2 id="emgTitle" data-i18n="emgTitulo">¿Qué está pasando?</h2>
+      <div class="emg-grid" id="emgGrid"></div>
+      <textarea id="emgDesc" rows="2" hidden data-i18n-ph="emgDescPh" placeholder="Describe la situación en pocas palabras…"></textarea>
+      <p class="emg-note"><span data-i18n="emgEnvioNota">Se enviará con PRIORIDAD MÁXIMA:</span> <strong id="emgWho"></strong></p>
+      <button class="danger-btn" id="emgSend" type="button" disabled data-i18n="enviarAlerta">ENVIAR ALERTA AHORA</button>
+    </div>
+  </div>
+
+  <!-- Emergencia: enviada -->
+  <div class="overlay" id="sentOverlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sentStatus">
+      <div class="relay" id="relay">
+        <div class="relay-node" data-node="0">📟<span data-i18n="nodoAldea">Aldea</span></div>
+        <div class="relay-wire" data-wire="0"><i></i></div>
+        <div class="relay-node" data-node="1">📡<span data-i18n="nodoRepetidor">Repetidor</span></div>
+        <div class="relay-wire" data-wire="1"><i></i></div>
+        <div class="relay-node" data-node="2">🏥<span data-i18n="nodoHub">Hub</span></div>
+      </div>
+      <p class="sent-status" id="sentStatus" data-i18n="enviando">Enviando alerta…</p>
+      <div id="sentDetail" hidden>
+        <p class="sent-ok" id="sentOkText">✓ Alerta recibida por el hub central</p>
+        <p class="sent-meta"><span id="sentMeta" class="mono"></span></p>
+        <p data-i18n="promotorNotificado">Un promotor de salud de la comunidad fue notificado.</p>
+        <h3 data-i18n="mientrasLlega">Mientras llega la ayuda:</h3>
+        <ol id="firstAid"></ol>
+        <p class="emg-nota" id="emgNota" hidden></p>
+        <button class="primary-btn" id="sentClose" type="button" data-i18n="volverInicio">Volver al inicio</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   Tinimit — interfaz del kiosko (Fase 3: cableada al hub)
+   Las consultas y emergencias van a la API del hub (POST /api/*). La orientación
+   la escribe el modelo médico local (MedGemma vía QVAC). El chip "tramas / bytes"
+   muestra el coste real del enlace que devuelve el hub (codec.py + link.py).
+   Sin enlace: las repreguntas guiadas salen de GUIAS_OFFLINE y las emergencias
+   muestran los primeros auxilios de FIRST_AID; el envío queda en cola (outbox).
+   --------------------------------------------------------------------------
+   Kaqchikel: el mecanismo i18n está completo. Solo se traducen las cadenas
+   con fuente confiable; el resto cae a español y se marca (subrayado punteado).
+   Las cadenas clínicas en kaqchikel deben validarse con hablantes nativos /
+   ALMG / materiales del MSPAS antes de usarse. NO se generan con el modelo.
+   ========================================================================== */
+
+const API_BASE = "";              // mismo origen (demo y SoftAP del ESP32 en 192.168.4.1)
+const OUTBOX_KEY = "aldea.outbox"; // cola de envíos pendientes sin enlace
+
+const SECTORES = [
+  "Sector Centro","Caserío El Tablón","Chuwa Nima Ab'aj",
+  "Panimaché I","Panimaché II","Xepiacul","La Estancia"
+];
+
+const MOTIVOS = [
+  {id:"fiebre", ic:"🌡️"}, {id:"dolor", ic:"😣"}, {id:"diarrea", ic:"🚽"},
+  {id:"tos", ic:"🤧"}, {id:"herida", ic:"🩹"}, {id:"embarazo", ic:"🤰"},
+  {id:"nino", ic:"🧒"}, {id:"medicamento", ic:"💊"}, {id:"otro", ic:"💬"}
+];
+
+const EMERGENCIAS = [
+  {id:"sangrado", ic:"🩸"}, {id:"respira", ic:"🫁"}, {id:"parto", ic:"👶"},
+  {id:"intox", ic:"⚠️"}, {id:"mordedura", ic:"🐍"}, {id:"accidente", ic:"🚑"},
+  {id:"otra", ic:"✍️"}
+];
+
+/* ---- Repreguntas guiadas para modo SIN ENLACE ----
+   Espejo de las `preguntas` de hub/guias.py (solo preguntas + prioridad; la
+   orientación final siempre la da el hub, nunca el cliente). Mantener en sync. */
+const GUIAS_OFFLINE = {
+  fiebre:{prioridad:"rutina",preguntas:[
+    "¿Hace cuántos días tiene fiebre?",
+    "¿Pudiste medir la temperatura? ¿Cuánto marcó?",
+    "¿Tiene además dolor de cabeza fuerte, vómitos, manchas en la piel, convulsiones o le cuesta respirar?"
+  ]},
+  dolor:{prioridad:"urgente",preguntas:[
+    "¿En qué parte del cuerpo es el dolor?",
+    "¿Desde cuándo y qué tan fuerte es: leve, molesto o muy fuerte?",
+    "¿Apareció después de un golpe o esfuerzo? ¿Se corre hacia otra parte del cuerpo?"
+  ]},
+  diarrea:{prioridad:"urgente",preguntas:[
+    "¿Cuántas veces al día y desde cuándo?",
+    "¿Hay sangre o moco en el excremento? ¿Hay vómito?",
+    "¿Orina poco, tiene la boca seca, los ojos hundidos o está muy decaída?"
+  ]},
+  tos:{prioridad:"rutina",preguntas:[
+    "¿Hace cuántos días? ¿Es seca o con flema?",
+    "¿Hay fiebre, dolor de garganta o de oído?",
+    "¿Le silba el pecho, respira rápido o se le hunden las costillas al respirar?"
+  ]},
+  herida:{prioridad:"urgente",preguntas:[
+    "¿Cómo se hizo la herida y hace cuánto?",
+    "¿Sangra mucho ahora o ya se detuvo?",
+    "¿Es profunda, tiene tierra u objeto adentro, o fue por mordedura o algo oxidado?"
+  ]},
+  embarazo:{prioridad:"urgente",preguntas:[
+    "¿De cuántos meses o semanas está?",
+    "¿Qué está sintiendo: control de rutina, dolor, sangrado, dolor de cabeza, hinchazón?",
+    "¿El bebé se mueve como siempre? ¿Ha tenido algún problema en este embarazo?"
+  ]},
+  nino:{prioridad:"urgente",preguntas:[
+    "¿Qué edad tiene el niño o la niña?",
+    "¿Qué le notas: fiebre, tos, diarrea, no quiere comer, decaído?",
+    "¿Está tomando líquidos y orinando? ¿Respira bien? ¿Reacciona como siempre?"
+  ]},
+  medicamento:{prioridad:"rutina",preguntas:[
+    "¿Qué medicamento es y para quién?",
+    "¿Sabes la dosis indicada y cada cuánto tomarlo?",
+    "¿La persona es alérgica a algún medicamento o toma otros?"
+  ]},
+  otro:{prioridad:"rutina",preguntas:[
+    "Cuéntame con tus palabras qué está pasando.",
+    "¿Desde cuándo lo notas y ha cambiado con el tiempo?",
+    "¿Hay algo que lo mejora o lo empeora? ¿Alguna otra molestia?"
+  ]}
+};
+
+const GENERIC_PREGUNTA = "Para orientarte mejor: ¿desde hace cuánto es y qué sientes exactamente? ¿Hay fiebre, sangre, dificultad para respirar o mucho dolor?";
+
+const FIRST_AID = {
+  sangrado:["Presiona fuerte y sin soltar sobre la herida con una tela limpia.","Si puedes, eleva la parte que sangra por encima del corazón.","Si la tela se empapa, pon otra encima sin quitar la primera.","Acuesta a la persona y abrígala; vigila que siga despierta."],
+  respira:["Pide ayuda a gritos a las personas cercanas.","Revisa la boca y saca solo lo que veas suelto.","Si no respira y sabes RCP: 30 compresiones fuertes al centro del pecho y 2 respiraciones. Repite sin parar.","No dejes sola a la persona hasta que llegue ayuda."],
+  parto:["Lávate bien las manos. Si la comadrona está, deja que ella guíe.","Cuando salga el bebé, recíbelo con una tela limpia y sécalo.","Ponlo sobre el pecho de la madre, piel con piel, y abriga a los dos.","No jales el cordón ni cortes nada; espera a la ayuda."],
+  intox:["Aleja a la persona del producto y del lugar.","NO le provoques el vómito.","Guarda el envase del producto para mostrarlo.","Si está en la piel o los ojos, lava con agua abundante varios minutos."],
+  mordedura:["Mantén a la persona quieta y calmada; el movimiento reparte el veneno.","Baja la zona mordida por debajo del corazón y quítale anillos o pulseras.","NO cortes, NO succiones y NO pongas torniquete.","Marca con lapicero el borde de la hinchazón y anota la hora."],
+  accidente:["Si golpeó cabeza, cuello o espalda, no la muevas salvo que haya más peligro.","Controla los sangrados con presión.","Abrígala y háblale para mantenerla despierta.","Vigila que siga respirando hasta que llegue ayuda."],
+  otra:["Mantén la calma y quédate con la persona.","No la muevas sin necesidad.","Abrígala y aflójale la ropa apretada.","Vigila su respiración y su estado hasta que llegue ayuda."]
+};
+
+/* ============ i18n ============ */
+const I18N = {
+  es:{
+    editarDatos:"Editar mis datos",
+    emergencia:"EMERGENCIA",
+    emergenciaSub:"Toca aquí si hay peligro de vida",
+    motivoTitulo:"Motivo de consulta",
+    disclaimer:"Orientación general, no reemplaza a un profesional. Si hay peligro de vida, usa Emergencia.",
+    escribeLabel:"Escribe tu consulta",
+    escribePlaceholder:"Escribe aquí tu consulta…",
+    vozPronto:"Disponible pronto: dictado por voz",
+    linkOnline:"Hub: OK · 2 saltos · ~380 ms",
+    linkOffline:"Sin enlace · se guardará y enviará al reconectar",
+    idiomaBanner:"Traducción K'iche' en validación con la ALMG. Donde falta, se muestra español (subrayado punteado).",
+    regTitulo:"Antes de empezar",
+    regTituloEdit:"Tus datos",
+    regNota:"Sin contraseñas: te identificamos por tu teléfono. Tus datos se guardan solo en este dispositivo y en el hub de la comunidad, nunca en internet.",
+    campoNombre:"Nombre",
+    campoEdad:"Edad",
+    campoSector:"Sector / Caserío",
+    campoNotas:"Alergias o condiciones (opcional)",
+    campoNotasPh:"Ej. alérgico a la penicilina, diabetes…",
+    idDispositivo:"ID de dispositivo",
+    guardarContinuar:"Guardar y continuar",
+    guardar:"Guardar",
+    volver:"Volver",
+    emgTitulo:"¿Qué está pasando?",
+    emgDescPh:"Describe la situación en pocas palabras…",
+    emgEnvioNota:"Se enviará con PRIORIDAD MÁXIMA:",
+    enviarAlerta:"ENVIAR ALERTA AHORA",
+    nodoAldea:"Aldea",
+    nodoRepetidor:"Repetidor",
+    nodoHub:"Hub",
+    enviando:"Enviando alerta…",
+    alertaRecibida:"✓ Alerta recibida por el hub central",
+    promotorNotificado:"Un promotor de salud de la comunidad fue notificado.",
+    mientrasLlega:"Mientras llega la ayuda:",
+    volverInicio:"Volver al inicio",
+    consultaPor:"Consulta por:",
+    consultasAnteriores:"Tus consultas anteriores",
+    continuarConsulta:"↩ Continuar esta consulta",
+    nuevaConsulta:"✚ Nueva consulta",
+    consultaSinTitulo:"Consulta",
+    consultaGuardada:"Consulta guardada. Puedes seguir preguntando aquí o tocar ✚ Nueva consulta.",
+    retomando:"Retomando esta consulta. Cuéntame cómo sigues.",
+    escribiendo:"escribiendo…",
+    prioridad_rutina:"Rutina",
+    prioridad_urgente:"Atención pronta",
+    prioridad_emergencia:"Puede ser grave",
+    avisoEmergencia:"Esto puede ser grave. Usa el botón EMERGENCIA de arriba.",
+    pendienteMsg:"Pendiente — se enviará al reconectar el enlace",
+    toastGuardado:"Datos guardados",
+    toastEnlaceOff:"Enlace caído (simulado)",
+    toastEnlaceOn:"Enlace restablecido",
+    hubPensando:"El hub está pensando…",
+    errEnvio:"No se pudo enviar. Se guardó y se reintenta al reconectar.",
+    colaEnviada:"Consultas pendientes enviadas",
+    unaPendiente:"Ya hay una consulta pendiente. Espera a que vuelva el enlace.",
+    alertaPendiente:"Alerta guardada — se enviará al reconectar el enlace",
+    "motivo.fiebre":"Fiebre","motivo.dolor":"Dolor","motivo.diarrea":"Diarrea",
+    "motivo.tos":"Tos o gripe","motivo.herida":"Herida","motivo.embarazo":"Embarazo",
+    "motivo.nino":"Niño enfermo","motivo.medicamento":"Medicamento","motivo.otro":"Otro",
+    "emg.sangrado":"Sangrado fuerte","emg.respira":"No respira / se ahoga","emg.parto":"Parto en curso",
+    "emg.intox":"Intoxicación","emg.mordedura":"Mordedura de serpiente","emg.accidente":"Accidente o golpe",
+    "emg.otra":"Otra — describir"
+  },
+  /* Idiomas maya: SOLO cadenas con fuente confiable. El resto hereda de 'es' y se
+     marca (subrayado punteado). Las cadenas CLÍNICAS se llenan en
+     hub/plantillas/<código>.py — ver docs/idiomas-maya.md.
+     UI: tomada de la localización de Firefox de Mozilla (MPL-2.0, revisada por la
+     comunidad):
+       K'iche'  → github.com/mozilla-l10n/android-l10n (Focus for Android, values-quc)
+       Kaqchikel → github.com/mozilla-l10n/firefox-l10n (cak/) */
+  quc:{
+    emergencia:"EMERGENCIA",
+    saludo:"Utz apetem.",           // "Bienvenido/a" — Mozilla Focus quc
+    langName:"K'iche'",
+    guardar:"Uk'olik",              // Mozilla Focus quc (action_save)
+    guardarContinuar:"Uk'olik"      // parcial ("y continuar" sin traducir) — REVISAR
+  },
+  cak:{
+    emergencia:"EMERGENCIA",
+    saludo:"La utz awäch?",         // saludo verificado (ya estaba)
+    langName:"Kaqchikel",
+    guardar:"Tiyak",                // Mozilla Firefox cak (commonDialogs Save)
+    volver:"Titzolïx"               // Mozilla Firefox cak (Revert / text-action-undo)
+  }
+};
+
+/* ============ ESTADO ============ */
+const state = {
+  lang: localStorage.getItem("aldea.lang") || "es",
+  profile: null,
+  mac: null,
+  online: true,
+  guide: null,        // id de motivo activo, o null (texto libre)
+  convId: null,        // id de la conversación en curso
+  convTitulo: "",      // título (síntoma / tema central) de la conversación en curso
+  mensajes: [],        // transcripción de la consulta en curso: {rol:"user"|"bot", texto}
+  sending: false,      // hay un POST en vuelo
+  emgType: null
+};
+
+const CONVS_KEY = "aldea.convs";  // conversaciones guardadas en el dispositivo
+
+function uuid(){
+  try{ if(crypto && crypto.randomUUID) return crypto.randomUUID(); }catch{}
+  return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+function convsLoad(){
+  try{ return JSON.parse(localStorage.getItem(CONVS_KEY) || "[]"); }catch{ return []; }
+}
+function convsSave(list){
+  try{ localStorage.setItem(CONVS_KEY, JSON.stringify(list.slice(0, 15))); }catch{}
+}
+/* guarda / actualiza la conversación en curso en el dispositivo */
+function persistConv(){
+  if(!state.convId || !state.mensajes.length) return;
+  const list = convsLoad().filter(c => c.id !== state.convId);
+  const prioridad = state._prioridad || "rutina";
+  list.unshift({
+    id: state.convId,
+    titulo: state.convTitulo || tituloDesde(state.mensajes),
+    ts: Date.now(),
+    prioridad,
+    es_emergencia: !!state._emergencia,
+    mensajes: state.mensajes.slice(-40),
+  });
+  convsSave(list);
+  renderHistorial();
+  if(typeof updateConvBar === "function") updateConvBar();
+}
+function tituloDesde(mensajes){
+  const first = (mensajes.find(m => m.rol === "user") || {}).texto || "";
+  let s = first.replace(/^consulta por:?\s*/i, "").trim();
+  if(s.length > 46) s = s.slice(0, 46).replace(/\s\S*$/, "") + "…";
+  return s.replace(/[\s.,;:!?¿¡…]+$/, "") || "Consulta";
+}
+function fmtFechaCorta(ts){
+  const d = new Date(ts), ahora = new Date();
+  const dd = Math.round((ahora - d) / 86400000);
+  const hm = d.toLocaleTimeString("es", {hour:"2-digit", minute:"2-digit"});
+  if(dd <= 0) return "hoy " + hm;
+  if(dd === 1) return "ayer " + hm;
+  if(dd < 7) return `hace ${dd} días`;
+  return d.toLocaleDateString("es", {day:"numeric", month:"short"});
+}
+
+/* ============ UTILIDADES ============ */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+
+function t(key){
+  const d = I18N[state.lang] || {};
+  if(d[key] != null) return {text:d[key], pending:false};
+  return {text:(I18N.es[key] ?? key), pending: state.lang !== "es"};
+}
+function applyI18n(root=document){
+  $$("[data-i18n]",root).forEach(el=>{
+    const {text,pending} = t(el.dataset.i18n);
+    el.textContent = text;
+    el.classList.toggle("i18n-pending", pending);
+  });
+  $$("[data-i18n-ph]",root).forEach(el=>{ el.placeholder = t(el.dataset.i18nPh).text; });
+  $$("[data-i18n-title]",root).forEach(el=>{ el.title = t(el.dataset.i18nTitle).text; });
+}
+
+function genMac(){
+  const h = ()=>Math.floor(Math.random()*256).toString(16).padStart(2,"0").toUpperCase();
+  return `AA:BB:CC:${h()}:${h()}:${h()}`;
+}
+
+/* Chip del enlace: usa el coste real que devuelve el hub (codec.py + link.py).
+   `lora` = objeto de la respuesta; `lora.downlink` describe la respuesta recibida. */
+function chipText(lora){
+  const d = lora.downlink || lora;
+  const s = ((d.airtime_ms||0)/1000).toFixed(1);
+  const tr = d.tramas===1 ? "1 trama" : `${d.tramas} tramas`;
+  const ratio = d.ratio ? ` · ${d.ratio}×` : "";
+  const saltos = lora.saltos ? ` · ${lora.saltos} saltos` : "";
+  return `📡 ${d.bytes}→${d.bytes_comprimido} B${ratio} · ${tr}${saltos} · ~${s} s`;
+}
+
+/* ============ API DEL HUB ============ */
+async function api(path, body, method="POST"){
+  const r = await fetch(API_BASE + path, {
+    method,
+    headers:{"content-type":"application/json"},
+    body: JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+/* ---- cola de envíos pendientes (sin enlace) ----
+   Emergencias: se acumulan. Consulta: solo se guarda UNA (la última transcripción),
+   para no reproducir turnos contra una transcripción vieja al reconectar. */
+function outboxLoad(){
+  try{ return JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]"); }catch{ return []; }
+}
+function outboxSave(list){ localStorage.setItem(OUTBOX_KEY, JSON.stringify(list)); }
+function enqueue(item){
+  let list = outboxLoad();
+  if(item.kind === "consulta") list = list.filter(i=>i.kind !== "consulta");
+  list.push({...item, ts: Date.now()});
+  outboxSave(list);
+}
+function hasPendingConsulta(){ return outboxLoad().some(i=>i.kind==="consulta"); }
+
+async function flushOutbox(){
+  let list = outboxLoad();
+  if(!list.length || !state.online) return;
+  while(list.length){
+    const item = list[0];
+    try{
+      const res = await api(item.path, item.body, item.method || "POST");
+      if(item.kind === "consulta"){
+        // recupera el hilo por si el flush ocurre tras recargar la página
+        state.guide = item.body.motivo || null;
+        state.convId = item.body.conversacion_id || state.convId;
+        state.mensajes = (item.body.mensajes || []).map(m=>({rol:m.rol, texto:m.texto}));
+        handleConsultaResponse(res, {fromQueue:true});
+      }
+    }catch{
+      return; // sigue sin enlace: se reintenta luego
+    }
+    list = outboxLoad(); list.shift(); outboxSave(list);
+  }
+  toast(t("colaEnviada").text);
+}
+
+function toast(msg){
+  const el = $("#toast");
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ el.hidden = true; }, 2400);
+}
+
+/* ============ CHAT ============ */
+const chat = $("#chat");
+const screen = $("#screen");
+function scrollDown(){
+  // en modo menú (motivos visibles) no perseguimos el chat: la parte de arriba
+  // (EMERGENCIA, motivos, consultas anteriores) es lo importante
+  const motivos = $("#motivos");
+  if(motivos && !motivos.hidden) return;
+  screen.scrollTo({top:screen.scrollHeight, behavior:"smooth"});
+}
+
+function addSys(text){
+  const d = document.createElement("div");
+  d.className = "sysline"; d.textContent = text;
+  chat.appendChild(d); scrollDown();
+}
+function addUser(text, {pending=false}={}){
+  const wrap = document.createElement("div");
+  wrap.className = "msg user" + (pending?" pending":"");
+  const b = document.createElement("div");
+  b.className = "bubble"; b.textContent = text;
+  wrap.appendChild(b);
+  if(pending){
+    const c = document.createElement("div");
+    c.className = "chip"; c.textContent = "⏳ " + t("pendienteMsg").text;
+    wrap.appendChild(c);
+  }
+  chat.appendChild(wrap); scrollDown();
+  return wrap;
+}
+function addBot(text, {priority=null, lora=null, fuente=null, idioma=null}={}){
+  const wrap = document.createElement("div");
+  wrap.className = "msg bot";
+  if(priority){
+    const p = document.createElement("span");
+    p.className = "pill " + (priority==="emergencia"?"emergencia":priority==="urgente"?"urgente":"rutina");
+    p.textContent = t("prioridad_"+priority).text;
+    wrap.appendChild(p);
+  }
+  const b = document.createElement("div");
+  b.className = "bubble";
+  // en modo idioma maya, si el hub tuvo que responder en español, se marca
+  if(idioma && state.lang !== "es" && idioma !== state.lang) b.classList.add("i18n-pending");
+  b.textContent = text;   // el hub ya incluye el aviso/disclaimer en la respuesta
+  wrap.appendChild(b);
+  const linea = document.createElement("div");
+  linea.className = "chip";
+  if(fuente) linea.textContent = (fuente==="modelo" ? "🤖 respuesta de la IA médica" : "📋 guía del puesto de salud");
+  if(lora) linea.textContent += (linea.textContent ? "  ·  " : "") + chipText(lora);
+  if(linea.textContent) wrap.appendChild(linea);
+  chat.appendChild(wrap); scrollDown();
+  if(priority==="emergencia") pulseEmergencia();
+}
+function pulseEmergencia(){
+  const b = $("#emergencyBtn");
+  b.classList.add("pulse");
+  setTimeout(()=>b.classList.remove("pulse"), 2400);
+}
+let typingEl = null;
+function showTyping(){
+  hideTyping();
+  typingEl = document.createElement("div");
+  typingEl.className = "typing";
+  typingEl.setAttribute("aria-label", t("escribiendo").text);
+  typingEl.innerHTML = "<i></i><i></i><i></i>";
+  chat.appendChild(typingEl); scrollDown();
+}
+function hideTyping(){ if(typingEl){ typingEl.remove(); typingEl = null; } }
+
+let botSayT = null;
+function botSay(text, opts={}){
+  showTyping();
+  const delay = Math.min(1900, 650 + text.length*7);
+  clearTimeout(botSayT);
+  botSayT = setTimeout(()=>{ hideTyping(); addBot(text, opts); }, delay);
+}
+function cancelBotSay(){ clearTimeout(botSayT); botSayT = null; hideTyping(); }
+
+/* ============ FLUJO DE CONSULTA ============ */
+function motivoLabel(id){ return t("motivo."+id).text; }
+
+function nuevaConsulta(){
+  state.guide = null;
+  state.mensajes = [];
+  state.convId = uuid();
+  state.convTitulo = "";
+  state._prioridad = "rutina";
+  state._emergencia = false;
+}
+function ensureConv(){ if(!state.convId) nuevaConsulta(); }
+function pushTurno(rol, texto){ state.mensajes.push({rol, texto}); }
+function botTurns(){ return state.mensajes.filter(m=>m.rol==="bot").length; }
+
+function setComposerDisabled(v){
+  $("#msgInput").disabled = v;
+  $("#sendBtn").disabled = v;
+}
+
+let pensandoEl = null;
+function showPensando(){
+  showTyping();
+  clearTimeout(showPensando._t);
+  showPensando._t = setTimeout(()=>{
+    if(!state.sending) return;
+    pensandoEl = document.createElement("div");
+    pensandoEl.className = "sysline"; pensandoEl.textContent = t("hubPensando").text;
+    chat.appendChild(pensandoEl); scrollDown();
+  }, 4000);
+}
+function hidePensando(){
+  clearTimeout(showPensando._t);
+  hideTyping();
+  if(pensandoEl){ pensandoEl.remove(); pensandoEl = null; }
+}
+
+function startGuide(id){
+  if(state.sending) return;
+  cancelBotSay();
+  chat.innerHTML = "";
+  nuevaConsulta();
+  state.guide = id;
+  state.convTitulo = motivoLabel(id);
+  setMode("chat");
+  const linea = `${t("consultaPor").text} ${motivoLabel(id)}`;
+  addSys(linea);
+  pushTurno("user", linea);
+  $("#msgInput").focus();
+  if(!state.online){
+    // sin enlace: primera repregunta local + deja el envío en cola
+    const q = (GUIAS_OFFLINE[id]||{}).preguntas?.[0] || GENERIC_PREGUNTA;
+    botSay(q); pushTurno("bot", q);
+    enqueue({kind:"consulta", path:"/api/consulta", body: consultaBody()});
+    persistConv();
+    toast(t("pendienteMsg").text);
+    return;
+  }
+  postConsulta();
+}
+
+function consultaBody(){
+  return {
+    mac: state.mac,
+    motivo: state.guide,
+    lang: state.lang,
+    conversacion_id: state.convId,
+    mensajes: state.mensajes.map(m=>({rol:m.rol, texto:m.texto}))
+  };
+}
+
+async function postConsulta(){
+  state.sending = true;
+  setComposerDisabled(true);
+  showPensando();
+  try{
+    const res = await api("/api/consulta", consultaBody());
+    handleConsultaResponse(res);
+  }catch(err){
+    hidePensando();
+    enqueue({kind:"consulta", path:"/api/consulta", body: consultaBody()});
+    toast(t("errEnvio").text);
+  }finally{
+    state.sending = false;
+    setComposerDisabled(false);
+  }
+}
+
+function handleConsultaResponse(res, {fromQueue=false}={}){
+  hidePensando();
+  // al reconectar, el hub puede devolver una repregunta que ya se mostró local: no repetir
+  const yaMostrada = fromQueue && res.estado === "seguimiento"
+    && state.mensajes.some(m=>m.rol==="bot" && m.texto === res.respuesta);
+  if(!yaMostrada){
+    pushTurno("bot", res.respuesta);
+    const opts = {lora: res.lora, idioma: res.idioma_respuesta};
+    if(res.estado === "final"){ opts.priority = res.prioridad; opts.fuente = res.fuente; }
+    addBot(res.respuesta, opts);
+  }
+  // el hub confirma / asigna el id de conversación
+  if(res.conversacion_id) state.convId = res.conversacion_id;
+  if(res.prioridad) state._prioridad = res.prioridad;
+  // se cierra el sub-flujo guiado, pero la conversación sigue: no borramos la
+  // transcripción para que el hub tenga contexto de lo que ya se habló.
+  if(res.estado === "final"){
+    state.guide = null;
+    if(!fromQueue) addSys(t("consultaGuardada").text);
+  }
+  if(state.mensajes.length > 24) state.mensajes = state.mensajes.slice(-24);
+  persistConv();
+  updateConvBar();
+}
+
+async function handleSend(text){
+  if(state.sending) return;
+  const arranca = !state.convId;
+  ensureConv();                       // texto libre desde el menú → arranca conversación
+  if(arranca){ cancelBotSay(); if($("#motivos").hidden === false) chat.innerHTML = ""; }
+  addUser(text, {pending: !state.online});
+  pushTurno("user", text);
+  if(!state.convTitulo) state.convTitulo = tituloDesde(state.mensajes);
+  setMode("chat");
+
+  if(!state.online){
+    // offline + modo guiado: la siguiente repregunta sale de GUIAS_OFFLINE
+    if(state.guide){
+      const qs = (GUIAS_OFFLINE[state.guide]||{}).preguntas || [];
+      const i = botTurns();
+      if(i < qs.length){ botSay(qs[i]); pushTurno("bot", qs[i]); }
+    }
+    enqueue({kind:"consulta", path:"/api/consulta", body: consultaBody()});
+    persistConv();
+    toast(t("pendienteMsg").text);
+    return;
+  }
+  postConsulta();
+}
+
+/* ============ MODO: menú (elegir) vs conversación (chatear) ============ */
+function setMode(mode){
+  const chatting = mode === "chat";
+  $("#convBar").hidden = !chatting;
+  $("#motivos").hidden = chatting;
+  $("#historial").hidden = chatting || !convsLoad().length;
+  if(chatting){ updateConvBar(); }
+  else { renderHistorial(); }
+}
+function updateConvBar(){
+  $("#convBarTitulo").textContent = state.convTitulo || t("consultaSinTitulo").text;
+  const n = state.mensajes.filter(m=>m.rol==="user").length;
+  $("#convBarN").textContent = n ? `· ${n}` : "";
+}
+
+/* ============ HISTORIAL DE CONVERSACIONES ============ */
+function ultimoMsg(c){
+  const m = (c.mensajes||[]).slice().reverse().find(x=>x.texto && x.texto.trim());
+  return m ? (m.rol==="user" ? "Tú: " : "") + m.texto : "";
+}
+function renderHistorial(){
+  const list = convsLoad();
+  const sec = $("#historial");
+  const enChat = $("#convBar").hidden === false;
+  sec.hidden = !list.length || enChat;
+  if(!list.length) return;
+  $("#histList").innerHTML = list.slice(0, 6).map(c=>`
+    <button type="button" class="hist-item ${c.es_emergencia?'emergencia':''}" data-id="${c.id.replace(/"/g,'&quot;')}">
+      <span class="hrow">
+        <span class="ht">${(c.titulo||"Consulta").replace(/</g,"&lt;")}</span>
+        <span class="hd">${fmtFechaCorta(c.ts)}</span>
+      </span>
+      <span class="hp">${(ultimoMsg(c)).replace(/</g,"&lt;").slice(0,90)}</span>
+      <span class="hgo" data-i18n="continuarConsulta">↩ Continuar esta consulta</span>
+    </button>`).join("");
+  $$("#histList .hist-item").forEach(b=> b.addEventListener("click", ()=>reabrirConv(b.dataset.id)));
+  applyI18n($("#histList"));
+}
+
+function reabrirConv(id){
+  if(state.sending) return;
+  const c = convsLoad().find(x=>x.id===id);
+  if(!c) return;
+  cancelBotSay();
+  chat.innerHTML = "";
+  state.guide = null;
+  state.convId = c.id;
+  state.convTitulo = c.titulo || "";
+  state._prioridad = c.prioridad || "rutina";
+  state._emergencia = !!c.es_emergencia;
+  state.mensajes = (c.mensajes||[]).map(m=>({rol:m.rol, texto:m.texto}));
+  setMode("chat");
+  addSys((state.convTitulo || "Consulta") + " · " + fmtFechaCorta(c.ts));
+  for(const m of state.mensajes){
+    if(m.rol === "user") addUser(m.texto);
+    else addBot(m.texto);
+  }
+  addSys(t("retomando").text);
+  $("#msgInput").focus();
+  scrollDown();
+}
+
+function nuevaConsultaUI(){
+  if(state.sending) return;
+  cancelBotSay();
+  chat.innerHTML = "";
+  nuevaConsulta();
+  state.convId = null;            // se crea al primer mensaje o al elegir motivo
+  setMode("menu");
+  greet();
+}
+
+/* ============ RENDER INICIAL ============ */
+function renderMotivos(){
+  const g = $("#motivoGrid"); g.innerHTML = "";
+  MOTIVOS.forEach(m=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "motivo";
+    b.innerHTML = `<span class="ic" aria-hidden="true">${m.ic}</span><span></span>`;
+    b.lastChild.textContent = motivoLabel(m.id);
+    b.addEventListener("click", ()=>startGuide(m.id));
+    g.appendChild(b);
+  });
+}
+function renderEmgGrid(){
+  const g = $("#emgGrid"); g.innerHTML = "";
+  EMERGENCIAS.forEach(e=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "emg-opt"; b.dataset.id = e.id;
+    b.innerHTML = `<span class="ic" aria-hidden="true">${e.ic}</span><span></span>`;
+    b.lastChild.textContent = t("emg."+e.id).text;
+    b.addEventListener("click", ()=>selectEmg(e.id, b));
+    g.appendChild(b);
+  });
+}
+function renderSectores(){
+  const s = $("#regSector"); s.innerHTML = "";
+  SECTORES.forEach(name=>{
+    const o = document.createElement("option");
+    o.value = name; o.textContent = name; s.appendChild(o);
+  });
+}
+
+/* ============ PERFIL / REGISTRO ============ */
+function loadProfile(){
+  state.mac = localStorage.getItem("aldea.mac");
+  if(!state.mac){ state.mac = genMac(); localStorage.setItem("aldea.mac", state.mac); }
+  try{ state.profile = JSON.parse(localStorage.getItem("aldea.profile")||"null"); }catch{ state.profile = null; }
+  if(state.profile && state.profile.notas && !state.profile.alergias){
+    state.profile.alergias = state.profile.notas;   // migración: notas -> alergias
+    delete state.profile.notas;
+    localStorage.setItem("aldea.profile", JSON.stringify(state.profile));
+  }
+}
+async function pushProfile(){
+  if(!state.profile) return;
+  const body = {
+    nombre: state.profile.nombre || "",
+    edad: String(state.profile.edad || ""),
+    sector: state.profile.sector || "",
+    alergias: state.profile.alergias || ""
+  };
+  try{ await api("/api/perfil/" + encodeURIComponent(state.mac), body, "PUT"); }
+  catch{ enqueue({kind:"perfil", method:"PUT", path:"/api/perfil/" + encodeURIComponent(state.mac), body}); }
+}
+function openReg(edit){
+  const ov = $("#regOverlay");
+  $("#macView").textContent = state.mac;
+  $("#regClose").hidden = !edit;
+  $("#regTitle").textContent = t(edit?"regTituloEdit":"regTitulo").text;
+  $("#regForm button[type=submit]").textContent = t(edit?"guardar":"guardarContinuar").text;
+  if(state.profile){
+    $("#regNombre").value = state.profile.nombre||"";
+    $("#regEdad").value = state.profile.edad||"";
+    $("#regSector").value = state.profile.sector||SECTORES[0];
+    $("#regNotas").value = state.profile.alergias||"";
+  }
+  ov.hidden = false;
+  setTimeout(()=>$("#regNombre").focus(), 60);
+}
+function closeReg(){ $("#regOverlay").hidden = true; }
+function saveProfile(e){
+  e.preventDefault();
+  state.profile = {
+    nombre: $("#regNombre").value.trim(),
+    edad: $("#regEdad").value.trim(),
+    sector: $("#regSector").value,
+    alergias: $("#regNotas").value.trim()
+  };
+  localStorage.setItem("aldea.profile", JSON.stringify(state.profile));
+  closeReg();
+  refreshWho();
+  pushProfile();
+  toast(t("toastGuardado").text);
+}
+function refreshWho(){
+  if(!state.profile) return;
+  $("#emgWho").textContent =
+    `${state.profile.nombre}, ${state.profile.edad} · ${state.profile.sector} · Aldea San Miguel`;
+}
+
+/* ============ EMERGENCIA ============ */
+function openEmg(){
+  state.emgType = null;
+  $$("#emgGrid .emg-opt").forEach(b=>b.classList.remove("is-sel"));
+  $("#emgDesc").hidden = true; $("#emgDesc").value = "";
+  $("#emgSend").disabled = true;
+  refreshWho();
+  $("#emgOverlay").hidden = false;
+}
+function selectEmg(id, btn){
+  state.emgType = id;
+  $$("#emgGrid .emg-opt").forEach(b=>b.classList.toggle("is-sel", b===btn));
+  $("#emgDesc").hidden = (id !== "otra");
+  $("#emgSend").disabled = false;
+  if(id==="otra") setTimeout(()=>$("#emgDesc").focus(), 50);
+}
+async function sendEmg(){
+  if(!state.emgType) return;
+  const tipo = state.emgType;
+  const descripcion = tipo === "otra" ? $("#emgDesc").value.trim() : "";
+  $("#emgOverlay").hidden = true;
+  $("#sentDetail").hidden = true;
+  $("#sentStatus").hidden = false;
+  $$("#relay .relay-node").forEach(n=>n.classList.remove("is-active"));
+  $$("#relay .relay-wire").forEach(n=>n.classList.remove("is-active"));
+  $("#sentOverlay").hidden = false;
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const anim = new Promise(resolve=>{
+    const marks = [
+      ()=>$('#relay .relay-node[data-node="0"]').classList.add("is-active"),
+      ()=>$('#relay .relay-wire[data-wire="0"]').classList.add("is-active"),
+      ()=>$('#relay .relay-node[data-node="1"]').classList.add("is-active"),
+      ()=>$('#relay .relay-wire[data-wire="1"]').classList.add("is-active"),
+      ()=>$('#relay .relay-node[data-node="2"]').classList.add("is-active"),
+    ];
+    if(reduce){ marks.forEach(fn=>fn()); resolve(); return; }
+    marks.forEach((fn,i)=>setTimeout(fn, 350 + i*430));
+    setTimeout(resolve, 350 + marks.length*430);
+  });
+
+  const emgConv = uuid();
+  const body = {mac: state.mac, tipo, descripcion, lang: state.lang, conversacion_id: emgConv};
+  let res = null;
+  if(state.online){
+    const [r] = await Promise.allSettled([api("/api/emergencia", body), anim]);
+    if(r.status === "fulfilled") res = r.value;
+  }else{
+    await anim;
+  }
+  if(!res){
+    enqueue({kind:"emergencia", path:"/api/emergencia", body});
+  }
+  // guarda la emergencia como conversación en el dispositivo
+  const etiqueta = (EMERGENCIAS.find(e=>e.id===tipo)||{}).id || tipo;
+  const list = convsLoad().filter(c=>c.id!==emgConv);
+  list.unshift({
+    id: emgConv, titulo: "🚨 " + t("emg."+tipo).text, ts: Date.now(),
+    prioridad: "emergencia", es_emergencia: true,
+    mensajes: [
+      {rol:"user", texto:"🚨 " + (descripcion || t("emg."+tipo).text)},
+      {rol:"bot", texto: res ? (res.primeros_auxilios||[]).join("\n") : t("alertaPendiente").text},
+    ],
+  });
+  convsSave(list); renderHistorial();
+  finishEmg(res, tipo);
+}
+
+function finishEmg(res, tipo){
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,"0");
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  $("#sentStatus").hidden = true;
+
+  $("#sentOkText").textContent = res
+    ? (res.ack || t("alertaRecibida").text)
+    : t("alertaPendiente").text;
+
+  if(res && res.meta && res.meta.lora){
+    const L = res.meta.lora, d = L.downlink || L;
+    const idh = "0x" + (L.id||0).toString(16).toUpperCase().padStart(3,"0");
+    const seg = ((d.airtime_ms||0)/1000).toFixed(1);
+    const tr = d.tramas===1 ? "1 trama" : `${d.tramas} tramas`;
+    $("#sentMeta").textContent =
+      `msg ${idh} · prioridad 3/3 · ${tr} · ${d.bytes_comprimido} B · ~${seg} s · Aldea→Repetidor→Hub · ${hh}:${mm}`;
+    $("#sentMeta").hidden = false;
+  }else{
+    $("#sentMeta").hidden = true;
+  }
+
+  const pasos = (res && res.primeros_auxilios && res.primeros_auxilios.length)
+    ? res.primeros_auxilios
+    : (FIRST_AID[tipo] || FIRST_AID.otra);
+  const marcar = state.lang !== "es" && (!res || res.idioma_respuesta !== state.lang);
+  const ol = $("#firstAid"); ol.innerHTML = "";
+  pasos.forEach(s=>{ const li = document.createElement("li"); li.textContent = s;
+    if(marcar) li.classList.add("i18n-pending"); ol.appendChild(li); });
+
+  const notaEl = $("#emgNota");
+  if(res && res.nota){ notaEl.textContent = res.nota; notaEl.hidden = false; }
+  else{ notaEl.hidden = true; }
+
+  $("#sentDetail").hidden = false;
+  scrollDown();
+}
+
+/* ============ ENLACE ============ */
+function setOnline(v){
+  state.online = v;
+  const pill = $("#linkBtn");
+  pill.classList.toggle("is-off", !v);
+  $("#linkText").textContent = t(v?"linkOnline":"linkOffline").text;
+  pill.querySelector(".dot").style.background = v ? "var(--accent)" : "var(--warn)";
+}
+
+/* ============ IDIOMA ============ */
+function setLang(l){
+  state.lang = l;
+  localStorage.setItem("aldea.lang", l);
+  $$("#langBtn .lang-opt").forEach(o=>o.classList.toggle("is-on", o.dataset.lang===l));
+  $("#idiomaBanner").hidden = (l === "es");
+  applyI18n();
+  renderMotivos();
+  renderEmgGrid();
+  setOnline(state.online);
+  refreshWho();
+}
+
+/* ============ INIT ============ */
+function init(){
+  loadProfile();
+  renderSectores();
+  renderMotivos();
+  renderEmgGrid();
+  setLang(state.lang);
+
+  $("#composer").addEventListener("submit", e=>{
+    e.preventDefault();
+    const inp = $("#msgInput");
+    const text = inp.value.trim();
+    if(!text) return;
+    inp.value = "";
+    handleSend(text);
+  });
+
+  $("#langBtn").addEventListener("click", ()=>setLang(state.lang==="es"?"quc":"es"));
+  $("#gearBtn").addEventListener("click", ()=>openReg(true));
+  $("#regClose").addEventListener("click", closeReg);
+  $("#regForm").addEventListener("submit", saveProfile);
+  $("#linkBtn").addEventListener("click", ()=>{
+    setOnline(!state.online);
+    toast(t(state.online?"toastEnlaceOn":"toastEnlaceOff").text);
+    if(state.online) flushOutbox();
+  });
+
+  $("#emergencyBtn").addEventListener("click", openEmg);
+  $("#emgBack").addEventListener("click", ()=>$("#emgOverlay").hidden = true);
+  $("#emgSend").addEventListener("click", sendEmg);
+  $("#sentClose").addEventListener("click", ()=>{
+    $("#sentOverlay").hidden = true;
+    if(!state.convId){ setMode("menu"); }   // volver al menú tras una emergencia
+  });
+  $("#nuevaBtn").addEventListener("click", nuevaConsultaUI);
+  setMode("menu");
+
+  // primera vez -> registro obligatorio; luego saludo del asistente
+  if(!state.profile){
+    openReg(false);
+    $("#regForm").addEventListener("submit", ()=>{ setTimeout(()=>{ setMode("menu"); greet(); }, 300); }, {once:true});
+  }else{
+    refreshWho();
+    greet();
+  }
+
+  if(state.online) flushOutbox();   // reenvía lo que quedó pendiente de una sesión anterior
+}
+function greet(){
+  const loc = I18N[state.lang];
+  const hi = (loc && loc.saludo) ? (loc.saludo + " ") : "";
+  const name = state.profile ? state.profile.nombre.split(" ")[0] : "";
+  const cuerpo = convsLoad().length
+    ? `¡Hola${name?", "+name:""}! 😊 ¿En qué te ayudo hoy? Toca un motivo, sigue una de tus consultas anteriores o escríbeme abajo.`
+    : `¡Hola${name?", "+name:""}! 😊 Soy el asistente de salud de la aldea. Estoy aquí para ayudarte.\n\nToca uno de los botones de arriba (fiebre, dolor, tos…) o cuéntame con tus palabras qué te está molestando.\n\nSi hay peligro de vida, toca el botón rojo de EMERGENCIA.`;
+  // el saludo va en el idioma elegido; el cuerpo (español) se marca si no es español
+  botSay(hi + cuerpo, state.lang !== "es" ? {idioma:"es"} : {});
+}
+
+init();
+</script>
