@@ -13,14 +13,34 @@ Todas las consultas quedan **registradas** identificando a la persona por la **M
 teléfono** (sin login), con un perfil mínimo. Los datos viven en el dispositivo y en el
 hub, **nunca en la nube**.
 
-Proyecto para el **Decentralized AI Hackathon** (ISD Summit + Tether/QVAC, 9–11 sep 2026),
-**categoría Psy de QVAC** (MedPsy). Licencia **MIT** (`LICENSE`). La regla dura:
-*enrutar inferencia a una API en la nube descalifica*; la nube solo se permite para
-servir la interfaz o el almacenamiento no sensible.
+Proyecto para el **Decentralized AI Hackathon** — *Sovereign Intelligence at the Edge*
+(ISD Summit + Tether/QVAC, 9–11 sep 2026). Compite en el **ranking general** (donde el
+tema del evento es la soberanía de la IA en el borde) y en la **categoría Psy de QVAC**
+(MedPsy en función central). Licencia **MIT** (`LICENSE`). Regla dura: *enrutar
+inferencia a una API en la nube descalifica*; la nube solo para servir la interfaz o el
+almacenamiento no sensible.
 
 - **Demo (video ≤ 5 min):** _pendiente — se añade el enlace aquí._
 - **Registro de rendimiento** (carga, TTFT, tok/s): [`docs/rendimiento.md`](docs/rendimiento.md).
 - **Arquitectura:** [`docs/arquitectura.md`](docs/arquitectura.md) · **Hardware/LoRa:** [`docs/hardware.md`](docs/hardware.md) · **Idioma maya:** [`docs/idiomas-maya.md`](docs/idiomas-maya.md).
+
+### Soberanía — el eje del proyecto
+
+*"IA que funcione donde la nube no llega, no debería llegar o cuesta demasiado."* Tinimit
+es exactamente eso, en varias capas:
+
+| Capa | Cómo |
+|---|---|
+| **Datos** | El historial médico **nunca sale de la aldea**. Identidad por MAC del teléfono, sin login, sin terceros. `device.db` (nodo de la aldea) → `hub.db` (puesto de salud); ninguna base sale a internet. |
+| **Infraestructura** | La aldea corre **su propio nodo** (ESP32 + radio) y su propia WiFi. No depende de cobertura de telecom ni de un proveedor cloud que pueda caerse, cortar el servicio, cobrar o censurar. Funciona con el enlace intermitente (cola offline) y sin él (texto curado local). |
+| **Inteligencia (edge)** | **MedPsy-4B corre 100 % local** sobre hardware barato que la comunidad posee: ~62 tok/s y TTFT ~150 ms en una GPU de 6 GB; el objetivo real es una SBC ARM (`linux-arm64`, CPU-only). Un modelo pequeño no es una limitación aquí — es lo que hace posible que la aldea sea dueña de su IA. |
+| **Clínica** | El contenido que importa (`hub/guias.py`) lo revisan **humanos de la comunidad** (ALMG / MSPAS); el modelo adapta el tono, no inventa el consejo. Red de seguridad: señales de alarma → emergencia, guardia anti-inyección, respaldo curado, disclaimer permanente. |
+| **Lengua y cultura** | K'iche' **curado y validado por la comunidad**, nunca generado por máquina (`hub/plantillas/`). El nombre del proyecto es K'iche'. |
+| **Control local** | El puesto de salud es dueño del registro y del inventario de medicina **por localidad**: ve quién consulta, desde dónde y sobre qué, y decide. |
+
+Esto es también lo que la **categoría Psy** premia: calidad de dominio medible en hardware
+edge realista, riesgos del dominio gestionados con responsabilidad, un modelo pequeño
+resolviendo un problema concreto que se beneficia de ese tamaño.
 
 ### Categoría Psy de QVAC — cumplimiento
 
