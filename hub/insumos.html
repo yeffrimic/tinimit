@@ -278,7 +278,12 @@ function construir(){
 
 /* ---------------- física: cada lugar tiende a su sitio ("home"); la repulsión
    solo resuelve solapes. Sencillo y estable con tan pocos nodos. ------------ */
-function fijo(n){ return (n.anclado && n!==drag); }
+// Anclado = fijo, salvo que sea el nodo bajo arrastre real (ya en movimiento). Antes
+// se soltaba apenas se presionaba el botón (drag=n), así que un simple click dejaba
+// al nodo un instante sujeto a la física (repulsión de sus vecinos) y se alejaba solo,
+// antes de que el evento "click" llegara a mostrar la info. Ahora sigue fijo hasta que
+// `moverDrag` confirma que sí hubo arrastre.
+function fijo(n){ return n.anclado && !(n===drag && n._moved); }
 function paso(){
   const K_REP=5200, K_HOME=0.05;
   const N = G.nodes;
