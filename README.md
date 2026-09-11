@@ -20,7 +20,7 @@ tema del evento es la soberanía de la IA en el borde) y en la **categoría Psy 
 inferencia a una API en la nube descalifica*; la nube solo para servir la interfaz o el
 almacenamiento no sensible.
 
-- **Demo (video ≤ 5 min):** _pendiente — se añade el enlace aquí._
+- **Demo (video ≤ 5 min):** https://www.tiktok.com/@yeffrimic/video/7684117435041074450 
 - **Registro de rendimiento** (carga, TTFT, tok/s): [`docs/rendimiento.md`](docs/rendimiento.md).
 - **Arquitectura:** [`docs/arquitectura.md`](docs/arquitectura.md) · **Hardware/LoRa:** [`docs/hardware.md`](docs/hardware.md) · **Idioma maya:** [`docs/idiomas-maya.md`](docs/idiomas-maya.md).
 
